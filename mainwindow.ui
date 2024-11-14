@@ -578,7 +578,7 @@ border-radius:30px;
       <string notr="true">background-color: rgb(255, 255, 255);</string>
      </property>
      <property name="currentIndex">
-      <number>1</number>
+      <number>2</number>
      </property>
      <widget class="QWidget" name="list_view">
       <widget class="QPushButton" name="pushButton">
@@ -1742,7 +1742,7 @@ color: rgb(0, 0, 0);
 border_radius:10px;</string>
         </property>
         <property name="text">
-         <string>2315067</string>
+         <string/>
         </property>
        </widget>
        <widget class="QLineEdit" name="lineEdit_59">
@@ -2040,7 +2040,7 @@ color: rgb(0, 0, 0);
 border_radius:10px;</string>
         </property>
         <property name="text">
-         <string>Hammemi</string>
+         <string/>
         </property>
        </widget>
        <widget class="QLineEdit" name="prenom_edit">
@@ -2058,7 +2058,7 @@ color: rgb(0, 0, 0);
 border_radius:10px;</string>
         </property>
         <property name="text">
-         <string>Mohamed</string>
+         <string/>
         </property>
        </widget>
        <widget class="QLineEdit" name="email_edit">
@@ -2076,7 +2076,7 @@ color: rgb(0, 0, 0);
 border_radius:10px;</string>
         </property>
         <property name="text">
-         <string>Mohamed.Hammemi@gmail.com</string>
+         <string/>
         </property>
        </widget>
        <widget class="QLineEdit" name="poste_edit">
@@ -2094,7 +2094,7 @@ color: rgb(0, 0, 0);
 border_radius:10px;</string>
         </property>
         <property name="text">
-         <string>Human Ressources</string>
+         <string/>
         </property>
        </widget>
        <widget class="QLineEdit" name="mdp_edit">
@@ -2112,7 +2112,7 @@ color: rgb(0, 0, 0);
 border_radius:10px;</string>
         </property>
         <property name="text">
-         <string>medham_2000</string>
+         <string/>
         </property>
        </widget>
        <widget class="QLineEdit" name="tel_edit">
@@ -2130,7 +2130,7 @@ color: rgb(0, 0, 0);
 border_radius:10px;</string>
         </property>
         <property name="text">
-         <string>55436728</string>
+         <string/>
         </property>
        </widget>
        <widget class="QDateEdit" name="birthdate_edit">
@@ -2286,7 +2286,7 @@ color: rgb(0, 0, 0);
 border_radius:10px;</string>
         </property>
         <property name="text">
-         <string>Mohamed.Hammemi@gmail.com</string>
+         <string/>
         </property>
        </widget>
       </widget>

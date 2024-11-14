@@ -14,10 +14,13 @@ class MainWindow : public QMainWindow
 public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
+    void load_list_view();
 
 private slots:
     void on_confirm_add_clicked();
     void on_delete_clicked();
+    void on_edit_clicked();
+    void on_confirm_edit_clicked();
 
 
 private:
