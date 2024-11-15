@@ -3,6 +3,7 @@
 #include <iostream>
 #include <typeinfo>
 #include <string>
+#include <QMessageBox>
 using namespace std;
 Employees::Employees(int id, QString nom ,QString prenom, QString gender, QDate date, QString adresse, QString email , QString tel, QString poste, QString mdp)
 {
@@ -99,5 +100,30 @@ bool Employees::supprimer(int Id_E)
  query.bindValue(":id_emp",Id_E);
  return query.exec();
 
+}
 
+// Function to search an employee by ID in the database
+QSqlQueryModel* Employees::search(int id)
+{
+    QSqlQuery query;
+    QSqlQueryModel *model = new QSqlQueryModel();
+
+    // Prepare the SQL query to fetch employee data based on the provided ID
+    query.prepare("SELECT * FROM MAYSSEM.EMPLOYEES WHERE ID_E = :id_emp");
+    query.bindValue(":id_emp", id);
+
+    // Execute the query
+    if (query.exec()) {
+        if (query.next()) {
+            model->setQuery(query);  // Set the result of the query to the model
+        } else {
+            // No employee found with the given ID
+            QMessageBox::warning(nullptr, "No Result", "No employee found with the entered ID.");
+        }
+    } else {
+        // Handle query execution failure
+        QMessageBox::critical(nullptr, "Database Error", "Failed to execute query.");
+    }
+
+    return model; // Return the model (it can be set to the table view)
 }

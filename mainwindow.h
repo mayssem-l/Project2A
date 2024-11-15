@@ -21,6 +21,8 @@ private slots:
     void on_delete_clicked();
     void on_edit_clicked();
     void on_confirm_edit_clicked();
+    void recherche_emp();
+    //void on_cancel_search_clicked();
 
 
 private:

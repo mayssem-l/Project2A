@@ -568,8 +568,8 @@ border-radius:30px;
     <widget class="QStackedWidget" name="stackedWidget">
      <property name="geometry">
       <rect>
-       <x>281</x>
-       <y>130</y>
+       <x>290</x>
+       <y>110</y>
        <width>891</width>
        <height>571</height>
       </rect>
@@ -584,10 +584,10 @@ border-radius:30px;
       <widget class="QPushButton" name="Search_Button">
        <property name="geometry">
         <rect>
-         <x>220</x>
-         <y>66</y>
-         <width>91</width>
-         <height>29</height>
+         <x>180</x>
+         <y>20</y>
+         <width>111</width>
+         <height>41</height>
         </rect>
        </property>
        <property name="styleSheet">
@@ -615,25 +615,6 @@ background-color: rgb(247, 255, 229);
        </property>
        <property name="text">
         <string>    First Name</string>
-       </property>
-      </widget>
-      <widget class="QLabel" name="cancel_search_button">
-       <property name="geometry">
-        <rect>
-         <x>70</x>
-         <y>20</y>
-         <width>31</width>
-         <height>31</height>
-        </rect>
-       </property>
-       <property name="text">
-        <string/>
-       </property>
-       <property name="pixmap">
-        <pixmap>../../../Downloads/no-data (1).png</pixmap>
-       </property>
-       <property name="scaledContents">
-        <bool>true</bool>
        </property>
       </widget>
       <widget class="QLabel" name="label_18">
@@ -943,8 +924,8 @@ border-color: rgb(121, 170, 147);</string>
       <widget class="QLineEdit" name="Search_line_edit">
        <property name="geometry">
         <rect>
-         <x>50</x>
-         <y>60</y>
+         <x>10</x>
+         <y>50</y>
          <width>161</width>
          <height>41</height>
         </rect>
@@ -1116,10 +1097,10 @@ border-radius:30px;
       <widget class="QPushButton" name="pushButton">
        <property name="geometry">
         <rect>
-         <x>0</x>
-         <y>50</y>
-         <width>41</width>
-         <height>51</height>
+         <x>180</x>
+         <y>70</y>
+         <width>111</width>
+         <height>41</height>
         </rect>
        </property>
        <property name="text">

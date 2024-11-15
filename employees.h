@@ -50,6 +50,8 @@ public:
     QSqlQueryModel *afficher();
     bool supprimer(int);
     bool modifier();
+    QSqlQueryModel *search(int);
+
 
 };
 

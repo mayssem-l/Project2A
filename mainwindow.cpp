@@ -49,6 +49,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     ui->tableView->setSelectionMode(QAbstractItemView::SingleSelection);
     connect(ui->Delete_Button, &QPushButton::clicked, this, &MainWindow::on_delete_clicked);
     connect(ui->Edit_Button, &QPushButton::clicked, this, &MainWindow::on_edit_clicked);
+    connect(ui->Search_Button, &QPushButton::clicked, this, &MainWindow::recherche_emp);
 
 }
 void MainWindow::on_confirm_add_clicked()
@@ -238,6 +239,33 @@ void MainWindow::on_confirm_edit_clicked()
 
 }
 
+void MainWindow::recherche_emp() {
+    QString search_id = ui->Search_line_edit->text().trimmed();
+
+        // Convert the ID to integer if needed
+        int id = search_id.toInt();
+
+        // Check if the ID is valid
+        if (id == 0) {
+            QMessageBox::warning(this, "Invalid ID", "Please enter a valid ID.");
+            return;
+        }
+
+        // Create an instance of the Employees class (assuming it exists in employees.h)
+        Employees emp;
+
+        // Call the search_employee function from employees.cpp
+        QSqlQueryModel *model = emp.search(id);
+
+        if (model) {
+            // Set the result to the table view
+            ui->tableView->setModel(model);
+        }
+}
+/*void MainWindow::cancel_search()
+{
+
+}*/
 
 
 
