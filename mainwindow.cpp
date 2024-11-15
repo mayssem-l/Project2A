@@ -6,8 +6,10 @@
 #include <QMessageBox>
 #include <QModelIndex>
 #include <QItemSelectionModel>
+#include <QFileDialog>
+#include <QStandardItemModel>
+#include<QHeaderView>
 #include "connection.h"
-
 using namespace std;
 MainWindow::~MainWindow()
 {
@@ -40,9 +42,9 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
         ui->stackedWidget->setCurrentWidget(ui->Stat);  // Affiche la page statemp
     });
 
-    connect(ui->Edit_Button, &QPushButton::clicked, this, [=]() {
+    /*connect(ui->Edit_Button, &QPushButton::clicked, this, [=]() {
         ui->stackedWidget->setCurrentWidget(ui->Edit);  // Affiche la page modemp
-    });
+    });*/
 
 
     ui->tableView->setSelectionBehavior(QAbstractItemView::SelectRows);
@@ -50,6 +52,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     connect(ui->Delete_Button, &QPushButton::clicked, this, &MainWindow::on_delete_clicked);
     connect(ui->Edit_Button, &QPushButton::clicked, this, &MainWindow::on_edit_clicked);
     connect(ui->Search_Button, &QPushButton::clicked, this, &MainWindow::recherche_emp);
+    //connect(ui->export_pdf_button, &QPushButton::clicked, this, &MainWindow::exportToPDF);
 
 }
 void MainWindow::on_confirm_add_clicked()
@@ -147,9 +150,11 @@ void MainWindow::on_edit_clicked()
     // Get the currently selected row
     QModelIndexList selectedRows = ui->tableView->selectionModel()->selectedRows();
     if (selectedRows.isEmpty()) {
-        QMessageBox::warning(this, "No Selection", "Please select a row to delete.");
+        QMessageBox::warning(this, "No Selection", "Please select a row to edit.");
+        cout<<"here_warning"<<endl;
         return;
-    }
+     }
+
         int row = selectedRows.first().row();
         cout<<"row:"<<row<<endl;
 
@@ -171,7 +176,7 @@ void MainWindow::on_edit_clicked()
 
         //display the edit_interface
        ui->stackedWidget->setCurrentWidget(ui->Edit);
-
+       cout<<"here_affichage"<<endl;
        //set the line_edits in edit interface
         ui->id_edit->setText(QString::number(id_E));
         ui->nom_edit->setText(nom_E);
@@ -183,9 +188,10 @@ void MainWindow::on_edit_clicked()
         ui->poste_edit->setText(poste_E);
         ui->mdp_edit->setText(mdp_E);
         ui->gender_edit->setCurrentText(sexe_E);
-        cout<<"here"<<endl;
+
         //update
         //on_confirm_edit_clicked();
+
 
 }
 void MainWindow::on_confirm_edit_clicked()
@@ -262,10 +268,95 @@ void MainWindow::recherche_emp() {
             ui->tableView->setModel(model);
         }
 }
-/*void MainWindow::cancel_search()
+void MainWindow::on_cancel_search_button_clicked()
 {
+    ui->Search_line_edit->clear();
+    Employees E;
+    ui->tableView->setModel(E.afficher());
 
+}
+/*void MainWindow::exportToPDF() {
+    QString fileName = QFileDialog::getSaveFileName(this, "Save File", "", "PDF Files (*.pdf)");
+    if (fileName.isEmpty()) return;
+
+    // Create a PDF writer
+    QPdfWriter pdfWriter(fileName);
+    pdfWriter.setPageSize(QPageSize(QPageSize::A4));
+
+    // Create a painter
+    QPainter painter(&pdfWriter);
+    painter.setFont(QFont("Times", 12));
+
+    // Table headers
+    QStringList headers = QStringList() << "ID" << "NOM" << "PRENOM" << "DATE_NAISSANCE" << "ADRESSE" << "EMAIL" << "TELEPHONE" << "POSTE" << "MDP" << "SEXE";
+    int rowHeight = 20;
+    int columnWidth = 100;
+
+    // Draw headers
+    for (int i = 0; i < headers.size(); ++i) {
+        painter.drawText(i*columnWidth, rowHeight, headers[i]);
+    }
+
+    // Draw a line
+    painter.drawLine(0, rowHeight + 5, columnWidth * headers.size(), rowHeight + 5);
+    rowHeight += 25;
+
+    // Fetch deliveries from the model
+    QSqlQueryModel * model = new QSqlQueryModel();
+    Employees Emp;
+    model = Emp.afficher();
+    int rowCount = model->rowCount();
+
+    // Populate the PDF with the data
+    for (int row = 0; row < rowCount; ++row) {
+        for (int column = 0; column < headers.size(); ++column) {
+            QString itemText = model->data(model->index(row, column)).toString();
+            painter.drawText(column*columnWidth, rowHeight, itemText);
+        }
+        rowHeight += 20;  // Move to next row
+    }
+
+    painter.end();
+    QMessageBox::information(this, "Export Successful", "Le fichier PDF a été effectué avec succès ");
 }*/
+
+void MainWindow::on_Sort_Button_clicked()
+{
+    // Get the sort criterion from the user input (e.g., ComboBox or LineEdit)
+    QString sortBy = ui->sort_criterion->currentText();  // Assuming a QComboBox is used
+
+    // Prepare the SQL query to fetch all employees from the database
+    QSqlQuery query;
+    QString sortOrder = "ASC";  // Default sort order (ascending)
+
+    if (sortBy == "Nom") {
+        query.prepare("SELECT * FROM MAYSSEM.EMPLOYEES ORDER BY NOM_E " + sortOrder);
+    } else if (sortBy == "Prenom") {
+        query.prepare("SELECT * FROM MAYSSEM.EMPLOYEES ORDER BY PRENOM_E " + sortOrder);
+    } else if (sortBy == "ID") {
+        query.prepare("SELECT * FROM MAYSSEM.EMPLOYEES ORDER BY ID_E " + sortOrder);
+    }
+    else {
+        QMessageBox::warning(this, "Invalid Sort Criterion", "Please select a valid criterion to sort by.");
+        return;
+    }
+
+    // Execute the query
+    if (query.exec()) {
+        // Create a model to hold the data from the database
+        QSqlQueryModel *model = new QSqlQueryModel();
+        model->setQuery(query);
+
+        // Set the model to the table view to display the sorted data
+        ui->tableView->setModel(model);
+    } else {
+        QMessageBox::critical(this, "Database Error", "Failed to execute query.");
+    }
+}
+
+
+
+
 
 
 
