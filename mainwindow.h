@@ -24,8 +24,9 @@ private slots:
     void recherche_emp();
     void on_cancel_search_button_clicked();
     //void on_export_pdf_button_clicked();
-    //void exportToPDF();
+    void exportToPDF();
     void on_Sort_Button_clicked();
+    void displayStatistics();
 
 
 private:

@@ -9,6 +9,14 @@
 #include <QFileDialog>
 #include <QStandardItemModel>
 #include<QHeaderView>
+#include <QtCharts/QChartView>
+#include <QtCharts/QPieSeries>
+#include <QtCharts/QChart>
+#include <QtCharts/QValueAxis>
+#include <QVBoxLayout>
+#include <QPdfWriter>
+#include <QPainter>
+#include <QFont>
 #include "connection.h"
 using namespace std;
 MainWindow::~MainWindow()
@@ -38,9 +46,9 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
         ui->stackedWidget->setCurrentWidget(ui->Add);  // Affiche la page addemp
     });
 
-    connect(ui->Stat_Button, &QPushButton::clicked, this, [=]() {
+    /*connect(ui->Stat_Button, &QPushButton::clicked, this, [=]() {
         ui->stackedWidget->setCurrentWidget(ui->Stat);  // Affiche la page statemp
-    });
+    });*/
 
     /*connect(ui->Edit_Button, &QPushButton::clicked, this, [=]() {
         ui->stackedWidget->setCurrentWidget(ui->Edit);  // Affiche la page modemp
@@ -52,7 +60,8 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     connect(ui->Delete_Button, &QPushButton::clicked, this, &MainWindow::on_delete_clicked);
     connect(ui->Edit_Button, &QPushButton::clicked, this, &MainWindow::on_edit_clicked);
     connect(ui->Search_Button, &QPushButton::clicked, this, &MainWindow::recherche_emp);
-    //connect(ui->export_pdf_button, &QPushButton::clicked, this, &MainWindow::exportToPDF);
+    connect(ui->export_pdf_button, &QPushButton::clicked, this, &MainWindow::exportToPDF);
+    connect(ui->Stat_Button, &QPushButton::clicked, this, &MainWindow::displayStatistics);
 
 }
 void MainWindow::on_confirm_add_clicked()
@@ -320,6 +329,111 @@ void MainWindow::on_cancel_search_button_clicked()
     QMessageBox::information(this, "Export Successful", "Le fichier PDF a été effectué avec succès ");
 }*/
 
+void MainWindow::exportToPDF() {
+    QString filePath = QFileDialog::getSaveFileName(this, "Save PDF", "", "*.pdf");
+    if (filePath.isEmpty()) {
+        return;
+    }
+
+    if (!filePath.endsWith(".pdf", Qt::CaseInsensitive)) {
+        filePath += ".pdf";
+    }
+
+    QPdfWriter pdfWriter(filePath);
+    pdfWriter.setPageSize(QPageSize(QPageSize::A4));
+    pdfWriter.setPageMargins(QMarginsF(10, 10, 10, 10));
+
+    QPainter painter(&pdfWriter);
+
+    QAbstractItemModel* model = ui->tableView->model();
+    if (!model) {
+        QMessageBox::warning(this, "Export Error", "No data available to export.");
+        return;
+    }
+
+    int rowCount = model->rowCount();
+    int columnCount = model->columnCount();
+
+    // Calculate column widths dynamically based on content
+    QVector<int> columnWidths(columnCount, 0);
+    QFontMetrics metrics(painter.font());
+    for (int col = 0; col < columnCount; ++col) {
+        QString headerText = model->headerData(col, Qt::Horizontal, Qt::DisplayRole).toString();
+        int maxWidth = metrics.horizontalAdvance(headerText) + 20; // Padding for headers
+        for (int row = 0; row < rowCount; ++row) {
+            QString cellText = model->data(model->index(row, col), Qt::DisplayRole).toString();
+            int textWidth = metrics.horizontalAdvance(cellText) + 20; // Padding for content
+            maxWidth = qMax(maxWidth, textWidth);
+        }
+        columnWidths[col] = maxWidth;
+    }
+
+    // Adjust row height dynamically
+    int rowHeight = metrics.height() + 20; // Padding for rows
+
+    // Title
+    int yPos = 100;
+    QFont titleFont("Arial", 20, QFont::Bold);
+    painter.setFont(titleFont);
+    painter.drawText(0, yPos - 50, pdfWriter.width(), rowHeight, Qt::AlignCenter, "Client Table");
+
+    // Draw headers
+    QFont headerFont("Arial", 14, QFont::Bold);
+    painter.setFont(headerFont);
+    int xPos = 0;
+    for (int col = 0; col < columnCount; ++col) {
+        QRect headerRect(xPos, yPos, columnWidths[col], rowHeight);
+        painter.fillRect(headerRect, Qt::lightGray);
+        painter.drawRect(headerRect);
+        QString headerText = model->headerData(col, Qt::Horizontal, Qt::DisplayRole).toString();
+        painter.drawText(headerRect.adjusted(5, 5, -5, -5), Qt::AlignCenter, headerText);
+        xPos += columnWidths[col];
+    }
+    yPos += rowHeight;
+
+    // Draw table content
+    QFont contentFont("Arial", 12);
+    painter.setFont(contentFont);
+    for (int row = 0; row < rowCount; ++row) {
+        xPos = 0;
+        QColor rowColor = (row % 2 == 0) ? QColor(240, 240, 240) : Qt::white;
+
+        for (int col = 0; col < columnCount; ++col) {
+            QRect cellRect(xPos, yPos, columnWidths[col], rowHeight);
+            painter.fillRect(cellRect, rowColor);
+            painter.drawRect(cellRect);
+            QString cellText = model->data(model->index(row, col), Qt::DisplayRole).toString();
+            painter.drawText(cellRect.adjusted(5, 5, -5, -5), Qt::AlignLeft | Qt::AlignVCenter, cellText);
+            xPos += columnWidths[col];
+        }
+        yPos += rowHeight;
+
+        // Page overflow handling
+        if (yPos + rowHeight > pdfWriter.height()) {
+            pdfWriter.newPage();
+            yPos = 100;
+
+            // Redraw headers
+            xPos = 0;
+            painter.setFont(headerFont);
+            for (int col = 0; col < columnCount; ++col) {
+                QRect headerRect(xPos, yPos, columnWidths[col], rowHeight);
+                painter.fillRect(headerRect, Qt::lightGray);
+                painter.drawRect(headerRect);
+                QString headerText = model->headerData(col, Qt::Horizontal, Qt::DisplayRole).toString();
+                painter.drawText(headerRect.adjusted(5, 5, -5, -5), Qt::AlignCenter, headerText);
+                xPos += columnWidths[col];
+            }
+            yPos += rowHeight;
+            painter.setFont(contentFont);
+        }
+    }
+
+    painter.end();
+    QMessageBox::information(this, "PDF Export", "PDF successfully created at: " + filePath);
+}
+
+
 void MainWindow::on_Sort_Button_clicked()
 {
     // Get the sort criterion from the user input (e.g., ComboBox or LineEdit)
@@ -352,6 +466,71 @@ void MainWindow::on_Sort_Button_clicked()
     } else {
         QMessageBox::critical(this, "Database Error", "Failed to execute query.");
     }
+}
+void MainWindow::displayStatistics() {
+    // Verify that 'stat' is indeed a QWidget (it should hold content like charts)
+    if (!ui->Stat) {
+        qDebug() << "'stat' widget is null!";
+        return;
+    }
+
+    // Clear any existing charts or widgets in the 'stat' page
+    QLayout *layout = ui->Stat->layout(); // Assuming 'stat' has a layout set
+    if (layout) {
+        QLayoutItem *item;
+        while ((item = layout->takeAt(0))) {
+            delete item->widget();
+            delete item;
+        }
+    } else {
+        layout = new QVBoxLayout(ui->Stat); // Create layout if not exists
+        ui->Stat->setLayout(layout);
+    }
+
+    // Create a map to hold the status counts
+    QMap<QString, int> statusCounts;
+    QSqlQuery query;
+
+    // Prepare and execute the query
+    query.prepare("SELECT SEXE_E, COUNT(*) FROM MAYSSEM.EMPLOYEES GROUP BY SEXE_E");
+    if (!query.exec()) {
+        qDebug() << "SQL Error:" << query.lastError().text();
+        QMessageBox::warning(this, "SQL Error", "Error retrieving statistics.");
+        return;
+    }
+
+    // Populate statusCounts
+    while (query.next()) {
+        QString etat = query.value(0).toString(); // Delivery state
+        int count = query.value(1).toInt(); // Count for this state
+        statusCounts[etat] = count; // Store in the map
+    }
+
+    if (statusCounts.isEmpty()) {
+        QMessageBox::information(this, "Statistics", "No Employees found.");
+        return;
+    }
+
+    // Create the pie series and populate it
+    QPieSeries *series = new QPieSeries();
+    for (auto it = statusCounts.constBegin(); it != statusCounts.constEnd(); ++it) {
+        series->append(it.key(), it.value());
+    }
+
+    // Create the chart
+    QChart *chart = new QChart();
+    chart->addSeries(series);
+    chart->setTitle("Employee Status Statistics");
+
+    // Create a chart view
+    QChartView *chartView = new QChartView(chart);
+    chartView->setRenderHint(QPainter::Antialiasing);
+
+    // Add the chart view to the stat widget
+    layout->addWidget(chartView); // Add chart view to the layout of the stat widget
+
+    // Switch to the stat page inside the stacked widget
+    ui->stackedWidget->setCurrentWidget(ui->Stat);  // Assuming 'stackedWidget' is the name of your QStackedWidget
 }
 
 
