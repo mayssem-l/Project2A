@@ -4,7 +4,9 @@
 #include <typeinfo>
 #include <string>
 #include <QMessageBox>
+#include <QString>
 using namespace std;
+//string KEY="key1234567890";
 Employees::Employees(int id, QString nom ,QString prenom, QString gender, QDate date, QString adresse, QString email , QString tel, QString poste, QString mdp)
 {
     Id_E=id;
@@ -18,6 +20,25 @@ Employees::Employees(int id, QString nom ,QString prenom, QString gender, QDate 
     Poste_E=poste;
     Mdp_E=mdp;
 }
+
+/*string Employees::encryptPassword(const string password, const string key) {
+    string encrypted = password; // Start with the original password
+    for (size_t i = 0; i < password.size(); ++i) {
+        encrypted[i] ^= key[i % key.size()]; // XOR each character with the key
+    }
+
+    return encrypted;
+}
+// Function to decrypt an encrypted password
+string Employees::decryptPassword(const string encrypted, const string key) {
+    std::string decrypted = encrypted; // Start with the encrypted password
+    for (size_t i = 0; i < encrypted.size(); ++i) {
+        decrypted[i] ^= key[i % key.size()]; // XOR each character with the key
+    }
+    return decrypted;
+}*/
+
+
 
 bool Employees::ajouter()
 {
@@ -37,6 +58,9 @@ bool Employees::ajouter()
   query.bindValue(":tel_emp",Tel_E);
   query.bindValue(":poste_emp",Poste_E);
   query.bindValue(":mdp_emp",Mdp_E);
+  /*QString mdp=QString();
+  mdp=QString::fromStdString(encryptPassword(Mdp_E.toStdString(),KEY));
+  query.bindValue(":mdp_emp",mdp);*/
   query.bindValue(":sexe_emp",Sexe_E);
   qDebug() << "Query: " << query.lastQuery();
   bool res=query.exec();
@@ -127,3 +151,26 @@ QSqlQueryModel* Employees::search(int id)
 
     return model; // Return the model (it can be set to the table view)
 }
+bool Employees::authenticate(int id, const QString &password, QString &poste) {
+    QSqlQuery query;
+
+    // Préparer une requête SQL pour vérifier l'ID et le mot de passe
+    query.prepare("SELECT POSTE_E FROM MAYSSEM.EMPLOYEES WHERE ID_E = :id AND MDP_E = :password");
+    query.bindValue(":id", id);
+    query.bindValue(":password", password);
+
+    // Exécuter la requête
+    if (query.exec()) {
+        // Vérifier si un résultat existe
+        if (query.next()) {
+            poste = query.value(0).toString();  // Récupérer le poste de l'employé
+            return true;                       // Authentification réussie
+        }
+    } else {
+        qDebug() << "Erreur SQL : " << query.lastError().text();
+    }
+
+    return false; // Échec de l'authentification
+}
+
+

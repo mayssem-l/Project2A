@@ -17,7 +17,11 @@
 #include <QPdfWriter>
 #include <QPainter>
 #include <QFont>
+#include <QtNetwork/QTcpSocket>   // Pour la communication via TCP
+#include <QtNetwork/QSslSocket>   // Pour les connexions sécurisées (SSL/TLS)
+#include <QByteArray>
 #include "connection.h"
+#include"mailer.h"
 using namespace std;
 MainWindow::~MainWindow()
 {
@@ -37,13 +41,21 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     Connection c;
     c.createconnect();
     ui->setupUi(this);
-    load_list_view();
+
+    ui->stackedWidget_gestions->setCurrentWidget(ui->login_page);
+    /*ui->Id_login->clear();
+    ui->Password_login->clear();*/
+
+    //load_list_view();
 
     // Connexion des boutons aux pages correspondantes du QStackedWidget
     connect(ui->List_Button, &QPushButton::clicked, this, &MainWindow::load_list_view );
 
     connect(ui->Add_Button, &QPushButton::clicked, this, [=]() {
         ui->stackedWidget->setCurrentWidget(ui->Add);  // Affiche la page addemp
+    });
+    connect(ui->forgotpassword_Button, &QPushButton::clicked, this, [=]() {
+        ui->stackedWidget_gestions->setCurrentWidget(ui->recover_password);
     });
 
     /*connect(ui->Stat_Button, &QPushButton::clicked, this, [=]() {
@@ -64,6 +76,41 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     connect(ui->Stat_Button, &QPushButton::clicked, this, &MainWindow::displayStatistics);
 
 }
+void MainWindow::on_Login_Button_clicked()
+{
+
+        int id = ui->Id_login->text().toInt();
+        QString password = ui->Password_login->text();
+
+        Employees employee;
+        QString role;
+
+        // Appeler la fonction authenticate
+        if (employee.authenticate(id, password, role)) {
+            emit loginSuccessful(role); // Notifie le rôle à MainWindow
+            QMessageBox::information(this,"Succès","LOGIN successful");
+            if (role == "RH") {
+                // Switch to Employee Management Interface
+                ui->stackedWidget_gestions->setCurrentWidget(ui->employees_page);
+            } else if (role == "service_client") {
+                // Switch to Client Management Interface
+                ui->stackedWidget_gestions->setCurrentWidget(ui->clients_page);
+            } else if (role == "technicien") {
+                // Switch to Equipment Management Interface
+                ui->stackedWidget_gestions->setCurrentWidget(ui->equipments_page);
+            } else {
+                // Handle unknown roles
+                QMessageBox::critical(this, "Erreur", "Rôle inconnu.");
+                ui->stackedWidget_gestions->setCurrentWidget(ui->login_page); // Return to Login Interface
+            }
+
+        } else {
+            QMessageBox::critical(this, "Erreur", "ID ou mot de passe incorrect.");
+        }
+
+
+}
+
 void MainWindow::on_confirm_add_clicked()
 {
 
@@ -532,6 +579,85 @@ void MainWindow::displayStatistics() {
     // Switch to the stat page inside the stacked widget
     ui->stackedWidget->setCurrentWidget(ui->Stat);  // Assuming 'stackedWidget' is the name of your QStackedWidget
 }
+bool MainWindow::getEmailAndPassword(int id, QString &email, QString &password) {
+    QSqlQuery query;
+    query.prepare("SELECT EMAIL_E, MDP_E FROM MAYSSEM.EMPLOYEES WHERE ID_E = :id");
+    query.bindValue(":id", id);
+    std::cout<<"id:"<<id<<endl;
+
+    if (query.exec() && query.next()) {
+        email = query.value("EMAIL_E").toString();
+        std::cout<<"email:"<<email.toStdString()<<endl;
+        password = query.value("MDP_E").toString();
+        std::cout<<"password:"<<password.toStdString()<<endl;
+        return true;
+    }
+
+    return false; // ID non trouvé
+}
+/*bool MainWindow::sendEmail(const QString &to, const QString &password) {
+    QString smtpServer = "smtp.gmail.com"; // Exemple : serveur SMTP Gmail
+    int port = 465; // Port SMTP pour TLS
+    QString senderEmail = "our.bankpi@gmail.com"; // Votre email
+    QString senderPassword = "eebt juxz fcmn zngm"; // Mot de passe ou app password
+
+    QString subject = "Récupération de votre mot de passe";
+    QString body = "Bonjour,\n\nVotre mot de passe est : " + password + "\n\nCordialement,\nL'équipe.";
+
+    // Simplification avec Qt (utiliser une bibliothèque plus robuste comme QtSmtpClient si nécessaire)
+    QSslSocket socket;
+    socket.connectToHostEncrypted(smtpServer, port);
+
+    if (!socket.waitForConnected(5000)) {
+        qDebug() << "Erreur de connexion SMTP :" << socket.errorString();
+        return false;
+    }
+
+    socket.write("EHLO example.com\r\n");
+    socket.write("AUTH LOGIN\r\n");
+    socket.write(QByteArray(senderEmail.toUtf8().toBase64() + "\r\n"));
+    socket.write(QByteArray(senderPassword.toUtf8().toBase64() + "\r\n"));
+    socket.write("MAIL FROM:<" + senderEmail.toUtf8() + ">\r\n");
+    socket.write("RCPT TO:<" + to.toUtf8() + ">\r\n");
+    socket.write("DATA\r\n");
+    socket.write("Subject: " + subject.toUtf8() + "\r\n");
+    socket.write(body.toUtf8() + "\r\n.\r\n");
+    socket.write("QUIT\r\n");
+
+    socket.waitForBytesWritten(5000);
+    socket.close();
+
+    return true;
+}*/
+void MainWindow::on_Recover_Button_clicked() {
+
+    mailer m;
+
+    // Récupérer l'ID saisi par l'utilisateur
+    int id = ui->Id_Recover->text().toInt();
+    if (id == 0) {
+        QMessageBox::warning(this, "Erreur", "Veuillez entrer un ID valide.");
+        return;
+    }
+
+    QString email, password;
+
+    // Rechercher l'email et le mot de passe dans la base de données
+    if (!getEmailAndPassword(id, email, password)) {
+        QMessageBox::critical(this, "Erreur", "ID non trouvé dans la base de données.");
+        return;
+    }
+    std::cout<<"email-2:"<<email.toStdString()<<endl;
+    std::cout<<"password-2:"<<password.toStdString()<<endl;
+    // Envoyer l'email
+    if (m.sendEmail(QString("mariem.lahbib7@gmail.com"),QString("Password Recovery Email"),QString("AZERRTY"))) {
+        QMessageBox::information(this, "Succès", "Un email contenant votre mot de passe a été envoyé.");
+    } else {
+        QMessageBox::critical(this, "Erreur", "Échec de l'envoi de l'email.");
+    }
+}
+
+
 
 
 

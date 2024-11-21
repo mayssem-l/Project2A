@@ -5,7 +5,7 @@
 #include<QString>
 #include<QDate>
 
-
+using namespace std;
 class Employees
 {
     int Id_E;
@@ -51,6 +51,10 @@ public:
     bool supprimer(int);
     bool modifier();
     QSqlQueryModel *search(int);
+    bool authenticate(int id, const QString &password, QString &poste);
+    /*string encryptPassword(const string password, const string key);
+    string decryptPassword(const string encrypted, const string key);*/
+
 
 
 };

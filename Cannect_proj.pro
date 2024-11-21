@@ -1,4 +1,4 @@
-QT       += core gui sql charts widgets charts printsupport
+QT       += core gui sql charts widgets charts printsupport core network
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
@@ -11,12 +11,14 @@ CONFIG += c++17
 SOURCES += \
     connection.cpp \
     employees.cpp \
+    mailer.cpp \
     main.cpp \
     mainwindow.cpp
 
 HEADERS += \
     connection.h \
     employees.h \
+    mailer.h \
     mainwindow.h
 
 FORMS += \
