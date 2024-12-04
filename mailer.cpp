@@ -1,140 +1,71 @@
-#include<iostream>
 #include "mailer.h"
-#include <QtNetwork>
-#include <QDebug>
-mailer::mailer()
-{
+
+Mailer::Mailer() {
 
 }
 
-int mailer::sendEmail(QString dist, QString obj, QString bdy)
-{
+void Mailer::sendEmail(const QString &recipient, const QString &subject, const QString &body) {
 
-    qDebug()<<"sslLibraryBuildVersionString: "<<QSslSocket::sslLibraryBuildVersionString();
-    qDebug()<<"sslLibraryVersionNumber: "<<QSslSocket::sslLibraryVersionNumber();
-    qDebug()<<"supportsSsl: "<<QSslSocket::supportsSsl();;
-    qDebug()<<QCoreApplication::libraryPaths();
-    // SMTP server information
     QString smtpServer = "smtp.gmail.com";
-    int smtpPort = 465;  // Adjust this based on your SMTP server configuration
-    QString username = "Cannect";
+    int port = 465;  // or 587 for TLS
+    QString username = "our.bankpi@gmail.com";
     QString password = "eebt juxz fcmn zngm";
-    //opuc ifgh tjle ciag
-    // Sender and recipient information
-    QString from = "our.bankpi@gmail.com";
-    QString to =dist;
-    std::cout<<"dist:"<<dist.toStdString()<<std::endl;
-    QString subject = obj;
-    QString body = bdy;
 
-    // Create a TCP socket
     QSslSocket socket;
-
-    // Connect to the SMTP server
-    socket.connectToHostEncrypted(smtpServer, smtpPort);
-    if (!socket.waitForConnected()) {
-        qDebug() << "Error connecting to the server:" << socket.errorString();
-        return -1;
+    socket.connectToHostEncrypted(smtpServer, port);
+    if (!socket.waitForConnected(30000)) {
+        qDebug() << "Failed to connect:" << socket.errorString();
+        return;
     }
 
-    // Wait for the greeting from the server
-    if (!socket.waitForReadyRead()) {
-        qDebug() << "Error reading from server:" << socket.errorString();
-        return -1;
-    }
+    QTextStream stream(&socket);
 
-    qDebug() << "Connected to the server.";
+    // Communicate with the SMTP server
+    stream << "HELO " << smtpServer << "\r\n";
+    stream.flush();
+    socket.waitForReadyRead();
+    qDebug() << socket.readAll();
 
-    // Send the HELO command
-    socket.write("HELO localhost\r\n");
-    socket.waitForBytesWritten();
+    stream << "AUTH LOGIN\r\n";
+    stream.flush();
+    socket.waitForReadyRead();
+    qDebug() << socket.readAll();
 
-    // Read the response from the server
-    if (!socket.waitForReadyRead()) {
-        qDebug() << "Error reading from server:" << socket.errorString();
-        return -1;
-    }
+    // Send base64 encoded username and password
+    stream << QByteArray(username.toUtf8().toBase64()) << "\r\n";
+    stream.flush();
+    socket.waitForReadyRead();
+    qDebug() << socket.readAll();
 
-    // Send the authentication information
-    socket.write("AUTH LOGIN\r\n");
-    socket.waitForBytesWritten();
+    stream << QByteArray(password.toUtf8().toBase64()) << "\r\n";
+    stream.flush();
+    socket.waitForReadyRead();
+    qDebug() << socket.readAll();
 
-    if (!socket.waitForReadyRead()) {
-        qDebug() << "Error reading from server:" << socket.errorString();
-        return -1;
-    }
+    // Send email headers and body
+    stream << "MAIL FROM: <" << username << ">\r\n";
+    stream.flush();
+    socket.waitForReadyRead();
+    qDebug() << socket.readAll();
 
-    // Send the username
-    socket.write(QByteArray().append(username.toUtf8()).toBase64() + "\r\n");
-    socket.waitForBytesWritten();
+    stream << "RCPT TO: <" << recipient << ">\r\n";
+    stream.flush();
+    socket.waitForReadyRead();
+    qDebug() << socket.readAll();
 
-    if (!socket.waitForReadyRead()) {
-        qDebug() << "Error reading from server:" << socket.errorString();
-        return -1;
-    }
+    stream << "DATA\r\n";
+    stream.flush();
+    socket.waitForReadyRead();
+    qDebug() << socket.readAll();
 
-    // Send the password
-    socket.write(QByteArray().append(password.toUtf8()).toBase64() + "\r\n");
-    socket.waitForBytesWritten();
+    stream << "Subject: " << subject << "\r\n\r\n"
+           << body << "\r\n.\r\n";
+    stream.flush();
+    socket.waitForReadyRead();
+    qDebug() << socket.readAll();
 
-    if (!socket.waitForReadyRead()) {
-        qDebug() << "Error reading from server:" << socket.errorString();
-        return -1;
-    }
-
-    // Send the MAIL FROM command
-    socket.write("EMAIL FROM:<" + from.toUtf8() + ">\r\n");
-    socket.waitForBytesWritten();
-
-    if (!socket.waitForReadyRead()) {
-        qDebug() << "Error reading from server:" << socket.errorString();
-        return -1;
-    }
-
-    // Send the RCPT TO command
-    socket.write("RCPT TO:<" + to.toUtf8() + ">\r\n");
-    socket.waitForBytesWritten();
-
-    if (!socket.waitForReadyRead()) {
-        qDebug() << "Error reading from server:" << socket.errorString();
-        return -1;
-    }
-
-    // Send the DATA command
-    socket.write("DATA\r\n");
-    socket.waitForBytesWritten();
-
-    if (!socket.waitForReadyRead()) {
-        qDebug() << "Error reading from server:" << socket.errorString();
-        return -1;
-    }
-
-    // Send the email content
-    socket.write("From: " + from.toUtf8() + "\r\n");
-    socket.write("To: " + to.toUtf8() + "\r\n");
-    socket.write("Subject: " + subject.toUtf8() + "\r\n");
-    socket.write("\r\n");  // Empty line before the body
-    socket.write(body.toUtf8() + "\r\n");
-    socket.write(".\r\n");  // End of email content
-    socket.waitForBytesWritten();
-
-    if (!socket.waitForReadyRead()) {
-        qDebug() << "Error reading from server:" << socket.errorString();
-        return -1;
-    }
-
-    // Send the QUIT command
-    socket.write("QUIT\r\n");
-    socket.waitForBytesWritten();
-
-    if (!socket.waitForReadyRead()) {
-        qDebug() << "Error reading from server:" << socket.errorString();
-        return -1;
-    }
-
-    qDebug() << "Email sent successfully.";
-    return 1;
-
-    // Close the socket
-    socket.close();
+    // Close the connection
+    stream << "QUIT\r\n";
+    stream.flush();
+    socket.waitForDisconnected();
 }

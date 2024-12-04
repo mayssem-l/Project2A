@@ -21,314 +21,327 @@
 #include <QtNetwork/QSslSocket>   // Pour les connexions sécurisées (SSL/TLS)
 #include <QByteArray>
 #include "connection.h"
-#include"mailer.h"
+#include "mailer.h"
+
 using namespace std;
-MainWindow::~MainWindow()
-{
-    delete ui;
+
+MainWindow::~MainWindow() {
+  delete ui;
 }
-void MainWindow::load_list_view()
-{
-    Employees E;
-    ui->tableView->setModel(E.afficher());
-    ui->stackedWidget->setCurrentWidget(ui->list_view);
-
-}
-MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWindow)
-{
-
-
-    Connection c;
-    c.createconnect();
-    ui->setupUi(this);
-
-    ui->stackedWidget_gestions->setCurrentWidget(ui->login_page);
-    /*ui->Id_login->clear();
-    ui->Password_login->clear();*/
-
-    //load_list_view();
-
-    // Connexion des boutons aux pages correspondantes du QStackedWidget
-    connect(ui->List_Button, &QPushButton::clicked, this, &MainWindow::load_list_view );
-
-    connect(ui->Add_Button, &QPushButton::clicked, this, [=]() {
-        ui->stackedWidget->setCurrentWidget(ui->Add);  // Affiche la page addemp
-    });
-    connect(ui->forgotpassword_Button, &QPushButton::clicked, this, [=]() {
-        ui->stackedWidget_gestions->setCurrentWidget(ui->recover_password);
-    });
-
-    /*connect(ui->Stat_Button, &QPushButton::clicked, this, [=]() {
-        ui->stackedWidget->setCurrentWidget(ui->Stat);  // Affiche la page statemp
-    });*/
-
-    /*connect(ui->Edit_Button, &QPushButton::clicked, this, [=]() {
-        ui->stackedWidget->setCurrentWidget(ui->Edit);  // Affiche la page modemp
-    });*/
-
-
-    ui->tableView->setSelectionBehavior(QAbstractItemView::SelectRows);
-    ui->tableView->setSelectionMode(QAbstractItemView::SingleSelection);
-    connect(ui->Delete_Button, &QPushButton::clicked, this, &MainWindow::on_delete_clicked);
-    connect(ui->Edit_Button, &QPushButton::clicked, this, &MainWindow::on_edit_clicked);
-    connect(ui->Search_Button, &QPushButton::clicked, this, &MainWindow::recherche_emp);
-    connect(ui->export_pdf_button, &QPushButton::clicked, this, &MainWindow::exportToPDF);
-    connect(ui->Stat_Button, &QPushButton::clicked, this, &MainWindow::displayStatistics);
+void MainWindow::load_list_view() {
+  Employees E;
+  ui->tableView->setModel(E.afficher());
+  ui->stackedWidget->setCurrentWidget(ui->list_view);
 
 }
-void MainWindow::on_Login_Button_clicked()
-{
+MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWindow) {
 
-        int id = ui->Id_login->text().toInt();
-        QString password = ui->Password_login->text();
 
-        Employees employee;
-        QString role;
+  Connection c;
+  c.createconnect();
+  ui->setupUi(this);
 
-        // Appeler la fonction authenticate
-        if (employee.authenticate(id, password, role)) {
-            emit loginSuccessful(role); // Notifie le rôle à MainWindow
-            QMessageBox::information(this,"Succès","LOGIN successful");
-            if (role == "RH") {
-                // Switch to Employee Management Interface
-                ui->stackedWidget_gestions->setCurrentWidget(ui->employees_page);
-            } else if (role == "service_client") {
-                // Switch to Client Management Interface
-                ui->stackedWidget_gestions->setCurrentWidget(ui->clients_page);
-            } else if (role == "technicien") {
-                // Switch to Equipment Management Interface
-                ui->stackedWidget_gestions->setCurrentWidget(ui->equipments_page);
-            } else {
-                // Handle unknown roles
-                QMessageBox::critical(this, "Erreur", "Rôle inconnu.");
-                ui->stackedWidget_gestions->setCurrentWidget(ui->login_page); // Return to Login Interface
-            }
+  ui->stackedWidget_gestions->setCurrentWidget(ui->login_page);
+  /*ui->Id_login->clear();
+  ui->Password_login->clear();*/
 
-        } else {
-            QMessageBox::critical(this, "Erreur", "ID ou mot de passe incorrect.");
-        }
+  //load_list_view();
 
+  // Connexion des boutons aux pages correspondantes du QStackedWidget
+  connect(ui->List_Button, &QPushButton::clicked, this, &MainWindow::load_list_view );
+
+  connect(ui->Add_Button, &QPushButton::clicked, this, [ = ]() {
+    ui->stackedWidget->setCurrentWidget(ui->Add);  // Affiche la page addemp
+  });
+  connect(ui->forgotpassword_Button, &QPushButton::clicked, this, [ = ]() {
+    ui->stackedWidget_gestions->setCurrentWidget(ui->recover_password);
+  });
+
+  /*connect(ui->Stat_Button, &QPushButton::clicked, this, [=]() {
+      ui->stackedWidget->setCurrentWidget(ui->Stat);  // Affiche la page statemp
+  });*/
+
+  /*connect(ui->Edit_Button, &QPushButton::clicked, this, [=]() {
+      ui->stackedWidget->setCurrentWidget(ui->Edit);  // Affiche la page modemp
+  });*/
+
+
+  ui->tableView->setSelectionBehavior(QAbstractItemView::SelectRows);
+  ui->tableView->setSelectionMode(QAbstractItemView::SingleSelection);
+  connect(ui->Delete_Button, &QPushButton::clicked, this, &MainWindow::on_delete_clicked);
+  connect(ui->Edit_Button, &QPushButton::clicked, this, &MainWindow::on_edit_clicked);
+  connect(ui->Search_Button, &QPushButton::clicked, this, &MainWindow::recherche_emp);
+  connect(ui->export_pdf_button, &QPushButton::clicked, this, &MainWindow::exportToPDF);
+  connect(ui->Stat_Button, &QPushButton::clicked, this, &MainWindow::displayStatistics);
 
 }
 
-void MainWindow::on_confirm_add_clicked()
-{
+void MainWindow::on_Login_Button_clicked() {
 
-    // Récupérer les données des QLineEdit
-    int Id_E = ui->id_add->text().toInt();
-    QString Nom_E = ui->nom_add->text();
-    QString Prenom_E = ui->prenom_add->text();
-    //QDate date = ui->birthdate_add->date();  // This gives a QDate
-     // QString Date_Nais_E = date.toString("yyyy-MM-dd");
-    QDate Date_Nais_E= ui->birthdate_add->date();
-      if (Date_Nais_E.isValid()) {
-          cout << "date_nais=" << Date_Nais_E.toString("yyyy-MM-dd").toStdString() << endl;  // Format as 'YYYY-MM-DD'
-      } else {
-          qDebug() << "Invalid date!";
-          cout<<"date_format_incorrect"<<endl;
-      }
-    QString Adresse_E = ui->adr_add->text();
-    QString Email_E = ui->email_add->text();
-    QString Tel_E = ui->tel_add->text();
-    QString Poste_E = ui->poste_add->text(); // Utilise la méthode `date()` pour récupérer une date
-    QString Mdp_E = ui->mdp_add->text();
-    QString Sexe_E = ui->gender_add->currentText();
+  int id = ui->Id_login->text().toInt();
+  QString password = ui->Password_login->text();
 
-    cout << Id_E << endl;
-    cout<< "nom:  " << Nom_E.toStdString() << " prenom: " <<Prenom_E.toStdString()<< " adresse:  " <<Adresse_E.toStdString()<< " Email:  " <<Email_E.toStdString()<< " tel:  " <<Tel_E.toStdString()<< " poste:  "<< Poste_E.toStdString() << "mdp:  "<<Mdp_E.toStdString()<< "sexe:  "<< Sexe_E.toStdString() << std::endl;
+  Employees employee;
+  QString role;
 
-
-    // Vérifier si les champs ne sont pas vides
-    if (Id_E == 0 || Nom_E.isEmpty() || Prenom_E.isEmpty() || Sexe_E.isEmpty()  || Adresse_E.isEmpty() || Email_E.isEmpty() || Tel_E.isEmpty() || Poste_E.isEmpty() || Mdp_E.isEmpty() ) {
-        QMessageBox::warning(this, "Champs manquants", "Veuillez remplir tous les champs.");
-        return;
-    }
-
-    Employees E(Id_E,Nom_E,Prenom_E,Sexe_E,Date_Nais_E,Adresse_E,Email_E,Tel_E,Poste_E,Mdp_E);
-    bool ajout=E.ajouter();
-
-
-    // Exécuter la requête et vérifier si l'insertion a réussi
-    if (ajout) {
-        QMessageBox::information(this, "Succès", "L'employé a été ajouté avec succès.");
-        // Réinitialiser les champs après l'ajout
-        ui->id_add->clear();
-        ui->nom_add->clear();
-        ui->prenom_add->clear();
-        //ui->gender_add->clear();
-        ui->birthdate_add->clear();
-        ui->adr_add->clear();
-        ui->email_add->clear();
-        ui->tel_add->clear();
-        ui->poste_add->clear();
-        ui->mdp_add->clear();
+  // Appeler la fonction authenticate
+  if (employee.authenticate(id, password, role)) {
+    emit loginSuccessful(role); // Notifie le rôle à MainWindow
+    QMessageBox::information(this, "Succès", "LOGIN successful");
+    if (role == "RH") {
+      // Switch to Employee Management Interface
+      ui->stackedWidget_gestions->setCurrentWidget(ui->employees_page);
+    } else if (role == "service_client") {
+      // Switch to Client Management Interface
+      ui->stackedWidget_gestions->setCurrentWidget(ui->clients_page);
+    } else if (role == "technicien") {
+      // Switch to Equipment Management Interface
+      ui->stackedWidget_gestions->setCurrentWidget(ui->equipments_page);
     } else {
-        QMessageBox::critical(this, "Erreur", "L'ajout de l'employé a échoué.");
+      // Handle unknown roles
+      QMessageBox::critical(this, "Erreur", "Rôle inconnu.");
+      ui->stackedWidget_gestions->setCurrentWidget(ui->login_page); // Return to Login Interface
     }
+
+  } else {
+    QMessageBox::critical(this, "Erreur", "ID ou mot de passe incorrect.");
+  }
+
+
+}
+
+void MainWindow::on_confirm_add_clicked() {
+
+  // Récupérer les données des QLineEdit
+  int Id_E = ui->id_add->text().toInt();
+  QString Nom_E = ui->nom_add->text();
+  QString Prenom_E = ui->prenom_add->text();
+  //QDate date = ui->birthdate_add->date();  // This gives a QDate
+  // QString Date_Nais_E = date.toString("yyyy-MM-dd");
+  QDate Date_Nais_E = ui->birthdate_add->date();
+  if (Date_Nais_E.isValid()) {
+    cout << "date_nais=" << Date_Nais_E.toString("yyyy-MM-dd").toStdString() << endl;  // Format as 'YYYY-MM-DD'
+  } else {
+    qDebug() << "Invalid date!";
+    cout << "date_format_incorrect" << endl;
+  }
+  QString Adresse_E = ui->adr_add->text();
+  QString Email_E = ui->email_add->text();
+  QString Tel_E = ui->tel_add->text();
+  QString Poste_E = ui->poste_add->text(); // Utilise la méthode `date()` pour récupérer une date
+  QString Mdp_E = ui->mdp_add->text();
+  QString Sexe_E = ui->gender_add->currentText();
+  QString Answ1_E = ui->fav_anim_add->text();
+  QString Answ2_E = ui->fav_snack_add->text();
+  cout << Id_E << endl;
+  cout << "nom:  " << Nom_E.toStdString() << " prenom: " << Prenom_E.toStdString() << " adresse:  " << Adresse_E.toStdString() << " Email:  " << Email_E.toStdString() << " tel:  " << Tel_E.toStdString() << " poste:  " << Poste_E.toStdString() << "mdp:  " << Mdp_E.toStdString() << "sexe:  " << Sexe_E.toStdString() << "sexe:  " << Answ1_E.toStdString() << Answ2_E.toStdString() << std::endl;
+
+
+  // Vérifier si les champs ne sont pas vides
+  if (Id_E == 0 || Nom_E.isEmpty() || Prenom_E.isEmpty() || Sexe_E.isEmpty()  || Adresse_E.isEmpty() || Email_E.isEmpty() || Tel_E.isEmpty() || Poste_E.isEmpty() || Mdp_E.isEmpty() ) {
+    QMessageBox::warning(this, "Champs manquants", "Veuillez remplir tous les champs.");
+    return;
+  }
+  // VALID e-mail
+  QRegularExpression emailRegex("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$");
+  if (!emailRegex.match(Email_E).hasMatch()) {
+      QMessageBox::warning(this, "Adresse e-mail invalide", "Veuillez entrer une adresse e-mail valide.");
+      return;
+  }
+
+  // valid tel (8 chiffres)
+  QRegularExpression phoneRegex("^\\d{8}$");
+  if (!phoneRegex.match(Tel_E).hasMatch()) {
+      QMessageBox::warning(this, "Numéro de téléphone invalide", "Le numéro de téléphone doit contenir exactement 8 chiffres.");
+      return;
+  }
+
+  Employees E(Id_E, Nom_E, Prenom_E, Sexe_E, Date_Nais_E, Adresse_E, Email_E, Tel_E, Poste_E, Mdp_E, Answ1_E, Answ2_E);
+  bool ajout = E.ajouter();
+
+
+  // Exécuter la requête et vérifier si l'insertion a réussi
+  if (ajout) {
+    QMessageBox::information(this, "Succès", "L'employé a été ajouté avec succès.");
+    // Réinitialiser les champs après l'ajout
+    ui->id_add->clear();
+    ui->nom_add->clear();
+    ui->prenom_add->clear();
+    //ui->gender_add->clear();
+    ui->birthdate_add->clear();
+    ui->adr_add->clear();
+    ui->email_add->clear();
+    ui->tel_add->clear();
+    ui->poste_add->clear();
+    ui->mdp_add->clear();
+    ui->fav_anim_add->clear();
+    ui->fav_snack_add->clear();
+  } else {
+    QMessageBox::critical(this, "Erreur", "L'ajout de l'employé a échoué.");
+  }
+  load_list_view();
+
+
+}
+
+void MainWindow::on_delete_clicked() {
+  // Get the currently selected row
+  QModelIndexList selectedRows = ui->tableView->selectionModel()->selectedRows();
+  if (selectedRows.isEmpty()) {
+    QMessageBox::warning(this, "No Selection", "Please select a row to delete.");
+    return;
+  }
+  // Get the first selected row's index
+  int row = selectedRows.first().row();
+
+  // Assuming your model is connected to the database:
+  // 1. Get the ID of the employee from the selected row
+  int id_emp = ui->tableView->model()->index(row, 0).data().toInt();  // assuming the ID is in column 0
+
+  // 2. Confirm deletion with the user (optional)
+  QMessageBox::StandardButton reply;
+  reply = QMessageBox::question(this, "Delete", "Are you sure you want to delete this employee?",
+                                QMessageBox::Yes | QMessageBox::No);
+  if (reply == QMessageBox::No) return;
+  Employees E;
+  bool success = E.supprimer(id_emp);
+  if (success) {
+    QMessageBox::information(this, "Success", "Employee deleted successfully.");
     load_list_view();
+  } else {
+    QMessageBox::warning(this, "Error", "Failed to delete employee.");
+  }
+}
+
+void MainWindow::on_edit_clicked() {
+  // Get the currently selected row
+  QModelIndexList selectedRows = ui->tableView->selectionModel()->selectedRows();
+  if (selectedRows.isEmpty()) {
+    QMessageBox::warning(this, "No Selection", "Please select a row to edit.");
+    cout << "here_warning" << endl;
+    return;
+  }
+
+  int row = selectedRows.first().row();
+  cout << "row:" << row << endl;
+
+  //get data in row_selected
+  // Access the model associated with the QTableView
+
+  QAbstractItemModel *model = ui->tableView->model();
+
+  int id_E = model->data(model->index(row, 0)).toInt(); // First column data
+  QString nom_E = model->data(model->index(row, 1)).toString();
+  QString prenom_E = model->data(model->index(row, 2)).toString();  // Prenom (third column)
+  QDate date_Nais_E = model->data(model->index(row, 3)).toDate();  // Date de naissance (fourth column)
+  QString adresse_E = model->data(model->index(row, 4)).toString();  // Adresse (fifth column)
+  QString email_E = model->data(model->index(row, 5)).toString();  // Email (sixth column)
+  QString tel_E = model->data(model->index(row, 6)).toString();  // Telephone (seventh column)
+  QString poste_E = model->data(model->index(row, 7)).toString();  // Poste (eighth column)
+  string decrypted_pw = (model->data(model->index(row, 8))).toString().toStdString();
+  QString mdp_E = QString::fromStdString(Employees::decryptPassword(decrypted_pw));  // Mot de passe (ninth column)
+  QString sexe_E = model->data(model->index(row, 9)).toString();
+
+
+  //display the edit_interface
+  ui->stackedWidget->setCurrentWidget(ui->Edit);
+  cout << "here_affichage" << endl;
+  //set the line_edits in edit interface
+  ui->id_edit->setText(QString::number(id_E));
+  ui->nom_edit->setText(nom_E);
+  ui->prenom_edit->setText(prenom_E);
+  ui->birthdate_edit->setDate(date_Nais_E);
+  ui->adr_edit->setText(adresse_E);
+  ui->email_edit->setText(email_E);
+  ui->tel_edit->setText(tel_E);
+  ui->poste_edit->setText(poste_E);
+  ui->mdp_edit->setText(mdp_E);
+  ui->gender_edit->setCurrentText(sexe_E);
+
+  //update
+  //on_confirm_edit_clicked();
 
 
 }
 
-void MainWindow::on_delete_clicked()
-{
-    // Get the currently selected row
-    QModelIndexList selectedRows = ui->tableView->selectionModel()->selectedRows();
-    if (selectedRows.isEmpty()) {
-        QMessageBox::warning(this, "No Selection", "Please select a row to delete.");
-        return;
-    }
-    // Get the first selected row's index
-    int row = selectedRows.first().row();
+void MainWindow::on_confirm_edit_clicked() {
+  //Recuperer les données encore une fois des line_edits
+  int Id_E = ui->id_edit->text().toInt();
+  QString Nom_E = ui->nom_edit->text();
+  QString Prenom_E = ui->prenom_edit->text();
+  QDate Date_Nais_E = ui->birthdate_edit->date();
+  if (Date_Nais_E.isValid()) {
+    cout << "date_nais=" << Date_Nais_E.toString("yyyy-MM-dd").toStdString() << endl;  // Format as 'YYYY-MM-DD'
+  } else {
+    qDebug() << "Invalid date!";
+    cout << "date_format_incorrect" << endl;
+  }
+  QString Adresse_E = ui->adr_edit->text();
+  QString Email_E = ui->email_edit->text();
+  QString Tel_E = ui->tel_edit->text();
+  QString Poste_E = ui->poste_edit->text(); // Utilise la méthode `date()` pour récupérer une date
+  QString Mdp_E = ui->mdp_edit->text();
+  QString Sexe_E = ui->gender_edit->currentText();
+  QString Answ1_E = ui->fav_anim_edit->text();
+  QString Answ2_E = ui->fav_snack_edit->text();
+  cout << Id_E << endl;
+  cout << "nom:  " << Nom_E.toStdString() << " prenom: " << Prenom_E.toStdString() << " adresse:  " << Adresse_E.toStdString() << " Email:  " << Email_E.toStdString() << " tel:  " << Tel_E.toStdString() << " poste:  " << Poste_E.toStdString() << "mdp:  " << Mdp_E.toStdString() << "sexe:  " << Sexe_E.toStdString() << std::endl;
+  cout << "im here" << endl;
 
-       // Assuming your model is connected to the database:
-       // 1. Get the ID of the employee from the selected row
-       int id_emp = ui->tableView->model()->index(row, 0).data().toInt();  // assuming the ID is in column 0
-
-       // 2. Confirm deletion with the user (optional)
-       QMessageBox::StandardButton reply;
-       reply = QMessageBox::question(this, "Delete", "Are you sure you want to delete this employee?",
-                                     QMessageBox::Yes | QMessageBox::No);
-       if (reply == QMessageBox::No) return;
-       Employees E;
-           bool success = E.supprimer(id_emp);
-           if (success) {
-               QMessageBox::information(this, "Success", "Employee deleted successfully.");
-               load_list_view();
-                        }
-           else {
-                   QMessageBox::warning(this, "Error", "Failed to delete employee.");
-               }
-}
-
-void MainWindow::on_edit_clicked()
-{
-    // Get the currently selected row
-    QModelIndexList selectedRows = ui->tableView->selectionModel()->selectedRows();
-    if (selectedRows.isEmpty()) {
-        QMessageBox::warning(this, "No Selection", "Please select a row to edit.");
-        cout<<"here_warning"<<endl;
-        return;
-     }
-
-        int row = selectedRows.first().row();
-        cout<<"row:"<<row<<endl;
-
-    //get data in row_selected
-    // Access the model associated with the QTableView
-
-        QAbstractItemModel *model = ui->tableView->model();
-
-        int id_E = model->data(model->index(row, 0)).toInt(); // First column data
-        QString nom_E = model->data(model->index(row, 1)).toString();
-        QString prenom_E = model->data(model->index(row, 2)).toString();  // Prenom (third column)
-        QDate date_Nais_E = model->data(model->index(row, 3)).toDate();  // Date de naissance (fourth column)
-        QString adresse_E = model->data(model->index(row, 4)).toString();  // Adresse (fifth column)
-        QString email_E = model->data(model->index(row, 5)).toString();  // Email (sixth column)
-        QString tel_E = model->data(model->index(row, 6)).toString();  // Telephone (seventh column)
-        QString poste_E = model->data(model->index(row, 7)).toString();  // Poste (eighth column)
-        QString mdp_E = model->data(model->index(row, 8)).toString();  // Mot de passe (ninth column)
-        QString sexe_E = model->data(model->index(row, 9)).toString();
-
-        //display the edit_interface
-       ui->stackedWidget->setCurrentWidget(ui->Edit);
-       cout<<"here_affichage"<<endl;
-       //set the line_edits in edit interface
-        ui->id_edit->setText(QString::number(id_E));
-        ui->nom_edit->setText(nom_E);
-        ui->prenom_edit->setText(prenom_E);
-        ui->birthdate_edit->setDate(date_Nais_E);
-        ui->adr_edit->setText(adresse_E);
-        ui->email_edit->setText(email_E);
-        ui->tel_edit->setText(tel_E);
-        ui->poste_edit->setText(poste_E);
-        ui->mdp_edit->setText(mdp_E);
-        ui->gender_edit->setCurrentText(sexe_E);
-
-        //update
-        //on_confirm_edit_clicked();
-
-
-}
-void MainWindow::on_confirm_edit_clicked()
-{
-    //Recuperer les données encore une fois des line_edits
-     int Id_E = ui->id_edit->text().toInt();
-     QString Nom_E = ui->nom_edit->text();
-     QString Prenom_E = ui->prenom_edit->text();
-     QDate Date_Nais_E= ui->birthdate_edit->date();
-       if (Date_Nais_E.isValid()) {
-           cout << "date_nais=" << Date_Nais_E.toString("yyyy-MM-dd").toStdString() << endl;  // Format as 'YYYY-MM-DD'
-       } else {
-           qDebug() << "Invalid date!";
-           cout<<"date_format_incorrect"<<endl;
-       }
-     QString Adresse_E = ui->adr_edit->text();
-     QString Email_E = ui->email_edit->text();
-     QString Tel_E = ui->tel_edit->text();
-     QString Poste_E = ui->poste_edit->text(); // Utilise la méthode `date()` pour récupérer une date
-     QString Mdp_E = ui->mdp_edit->text();
-     QString Sexe_E = ui->gender_edit->currentText();
-
-     cout << Id_E << endl;
-     cout<< "nom:  " << Nom_E.toStdString() << " prenom: " <<Prenom_E.toStdString()<< " adresse:  " <<Adresse_E.toStdString()<< " Email:  " <<Email_E.toStdString()<< " tel:  " <<Tel_E.toStdString()<< " poste:  "<< Poste_E.toStdString() << "mdp:  "<<Mdp_E.toStdString()<< "sexe:  "<< Sexe_E.toStdString() << std::endl;
-     cout<<"im here"<<endl;
-
-     // Vérifier si les champs ne sont pas vides
-     if (Id_E == 0 || Nom_E.isEmpty() || Prenom_E.isEmpty() || Sexe_E.isEmpty()  || Adresse_E.isEmpty() || Email_E.isEmpty() || Tel_E.isEmpty() || Poste_E.isEmpty() || Mdp_E.isEmpty() ) {
-         QMessageBox::warning(this, "Champs manquants", "Veuillez remplir tous les champs.");
-         return;
-     }
-     Employees E(Id_E,Nom_E,Prenom_E,Sexe_E,Date_Nais_E,Adresse_E,Email_E,Tel_E,Poste_E,Mdp_E);
-     bool edit=E.modifier();
-     if (edit) {
-         QMessageBox::information(this, "Succès", "L'employé a été modifié avec succès.");
-         // Réinitialiser les champs après l'ajout
-         ui->id_edit->clear();
-         ui->nom_edit->clear();
-         ui->prenom_edit->clear();
-         //ui->gender_add->clear();
-         ui->birthdate_edit->clear();
-         ui->adr_edit->clear();
-         ui->email_edit->clear();
-         ui->tel_edit->clear();
-         ui->poste_edit->clear();
-         ui->mdp_edit->clear();
-     } else {
-         QMessageBox::critical(this, "Erreur", "La modification de l'employé a échoué.");
-     }
-     load_list_view();
+  // Vérifier si les champs ne sont pas vides
+  if (Id_E == 0 || Nom_E.isEmpty() || Prenom_E.isEmpty() || Sexe_E.isEmpty()  || Adresse_E.isEmpty() || Email_E.isEmpty() || Tel_E.isEmpty() || Poste_E.isEmpty() || Mdp_E.isEmpty() ) {
+    QMessageBox::warning(this, "Champs manquants", "Veuillez remplir tous les champs.");
+    return;
+  }
+  Employees E(Id_E, Nom_E, Prenom_E, Sexe_E, Date_Nais_E, Adresse_E, Email_E, Tel_E, Poste_E, Mdp_E, Answ1_E, Answ2_E);
+  bool edit = E.modifier();
+  if (edit) {
+    QMessageBox::information(this, "Succès", "L'employé a été modifié avec succès.");
+    // Réinitialiser les champs après l'ajout
+    ui->id_edit->clear();
+    ui->nom_edit->clear();
+    ui->prenom_edit->clear();
+    //ui->gender_add->clear();
+    ui->birthdate_edit->clear();
+    ui->adr_edit->clear();
+    ui->email_edit->clear();
+    ui->tel_edit->clear();
+    ui->poste_edit->clear();
+    ui->mdp_edit->clear();
+  } else {
+    QMessageBox::critical(this, "Erreur", "La modification de l'employé a échoué.");
+  }
+  load_list_view();
 
 }
 
 void MainWindow::recherche_emp() {
-    QString search_id = ui->Search_line_edit->text().trimmed();
+  QString search_id = ui->Search_line_edit->text().trimmed();
 
-        // Convert the ID to integer if needed
-        int id = search_id.toInt();
+  // Convert the ID to integer if needed
+  int id = search_id.toInt();
 
-        // Check if the ID is valid
-        if (id == 0) {
-            QMessageBox::warning(this, "Invalid ID", "Please enter a valid ID.");
-            return;
-        }
+  // Check if the ID is valid
+  if (id == 0) {
+    QMessageBox::warning(this, "Invalid ID", "Please enter a valid ID.");
+    return;
+  }
 
-        // Create an instance of the Employees class (assuming it exists in employees.h)
-        Employees emp;
+  // Create an instance of the Employees class (assuming it exists in employees.h)
+  Employees emp;
 
-        // Call the search_employee function from employees.cpp
-        QSqlQueryModel *model = emp.search(id);
+  // Call the search_employee function from employees.cpp
+  QSqlQueryModel *model = emp.search(id);
 
-        if (model) {
-            // Set the result to the table view
-            ui->tableView->setModel(model);
-        }
+  if (model) {
+    // Set the result to the table view
+    ui->tableView->setModel(model);
+  }
 }
-void MainWindow::on_cancel_search_button_clicked()
-{
-    ui->Search_line_edit->clear();
-    Employees E;
-    ui->tableView->setModel(E.afficher());
+void MainWindow::on_cancel_search_button_clicked() {
+  ui->Search_line_edit->clear();
+  Employees E;
+  ui->tableView->setModel(E.afficher());
 
 }
 /*void MainWindow::exportToPDF() {
@@ -377,285 +390,306 @@ void MainWindow::on_cancel_search_button_clicked()
 }*/
 
 void MainWindow::exportToPDF() {
-    QString filePath = QFileDialog::getSaveFileName(this, "Save PDF", "", "*.pdf");
-    if (filePath.isEmpty()) {
-        return;
+  QString filePath = QFileDialog::getSaveFileName(this, "Save PDF", "", "*.pdf");
+  if (filePath.isEmpty()) {
+    return;
+  }
+
+  if (!filePath.endsWith(".pdf", Qt::CaseInsensitive)) {
+    filePath += ".pdf";
+  }
+
+  QPdfWriter pdfWriter(filePath);
+  pdfWriter.setPageSize(QPageSize(QPageSize::A4));
+  pdfWriter.setPageMargins(QMarginsF(10, 10, 10, 10));
+
+  QPainter painter(&pdfWriter);
+
+  QAbstractItemModel* model = ui->tableView->model();
+  if (!model) {
+    QMessageBox::warning(this, "Export Error", "No data available to export.");
+    return;
+  }
+
+  int rowCount = model->rowCount();
+  int columnCount = model->columnCount();
+
+  // Calculate column widths dynamically based on content
+  QVector<int> columnWidths(columnCount, 0);
+  QFontMetrics metrics(painter.font());
+  for (int col = 0; col < columnCount; ++col) {
+    QString headerText = model->headerData(col, Qt::Horizontal, Qt::DisplayRole).toString();
+    int maxWidth = metrics.horizontalAdvance(headerText) + 20; // Padding for headers
+    for (int row = 0; row < rowCount; ++row) {
+      QString cellText = model->data(model->index(row, col), Qt::DisplayRole).toString();
+      int textWidth = metrics.horizontalAdvance(cellText) + 20; // Padding for content
+      maxWidth = qMax(maxWidth, textWidth);
     }
+    columnWidths[col] = maxWidth;
+  }
 
-    if (!filePath.endsWith(".pdf", Qt::CaseInsensitive)) {
-        filePath += ".pdf";
-    }
+  // Adjust row height dynamically
+  int rowHeight = metrics.height() + 20; // Padding for rows
 
-    QPdfWriter pdfWriter(filePath);
-    pdfWriter.setPageSize(QPageSize(QPageSize::A4));
-    pdfWriter.setPageMargins(QMarginsF(10, 10, 10, 10));
+  // Title
+  int yPos = 100;
+  QFont titleFont("Arial", 20, QFont::Bold);
+  painter.setFont(titleFont);
+  painter.drawText(0, yPos - 50, pdfWriter.width(), rowHeight, Qt::AlignCenter, "Employees Table");
 
-    QPainter painter(&pdfWriter);
+  // Draw headers
+  QFont headerFont("Arial", 14, QFont::Bold);
+  painter.setFont(headerFont);
+  int xPos = 0;
+  for (int col = 0; col < columnCount; ++col) {
+    QRect headerRect(xPos, yPos, columnWidths[col], rowHeight);
+    painter.fillRect(headerRect, Qt::lightGray);
+    painter.drawRect(headerRect);
+    QString headerText = model->headerData(col, Qt::Horizontal, Qt::DisplayRole).toString();
+    painter.drawText(headerRect.adjusted(5, 5, -5, -5), Qt::AlignCenter, headerText);
+    xPos += columnWidths[col];
+  }
+  yPos += rowHeight;
 
-    QAbstractItemModel* model = ui->tableView->model();
-    if (!model) {
-        QMessageBox::warning(this, "Export Error", "No data available to export.");
-        return;
-    }
+  // Draw table content
+  QFont contentFont("Arial", 12);
+  painter.setFont(contentFont);
+  for (int row = 0; row < rowCount; ++row) {
+    xPos = 0;
+    QColor rowColor = (row % 2 == 0) ? QColor(240, 240, 240) : Qt::white;
 
-    int rowCount = model->rowCount();
-    int columnCount = model->columnCount();
-
-    // Calculate column widths dynamically based on content
-    QVector<int> columnWidths(columnCount, 0);
-    QFontMetrics metrics(painter.font());
     for (int col = 0; col < columnCount; ++col) {
-        QString headerText = model->headerData(col, Qt::Horizontal, Qt::DisplayRole).toString();
-        int maxWidth = metrics.horizontalAdvance(headerText) + 20; // Padding for headers
-        for (int row = 0; row < rowCount; ++row) {
-            QString cellText = model->data(model->index(row, col), Qt::DisplayRole).toString();
-            int textWidth = metrics.horizontalAdvance(cellText) + 20; // Padding for content
-            maxWidth = qMax(maxWidth, textWidth);
-        }
-        columnWidths[col] = maxWidth;
+      QRect cellRect(xPos, yPos, columnWidths[col], rowHeight);
+      painter.fillRect(cellRect, rowColor);
+      painter.drawRect(cellRect);
+      QString cellText = model->data(model->index(row, col), Qt::DisplayRole).toString();
+      painter.drawText(cellRect.adjusted(5, 5, -5, -5), Qt::AlignLeft | Qt::AlignVCenter, cellText);
+      xPos += columnWidths[col];
     }
+    yPos += rowHeight;
 
-    // Adjust row height dynamically
-    int rowHeight = metrics.height() + 20; // Padding for rows
+    // Page overflow handling
+    if (yPos + rowHeight > pdfWriter.height()) {
+      pdfWriter.newPage();
+      yPos = 100;
 
-    // Title
-    int yPos = 100;
-    QFont titleFont("Arial", 20, QFont::Bold);
-    painter.setFont(titleFont);
-    painter.drawText(0, yPos - 50, pdfWriter.width(), rowHeight, Qt::AlignCenter, "Client Table");
-
-    // Draw headers
-    QFont headerFont("Arial", 14, QFont::Bold);
-    painter.setFont(headerFont);
-    int xPos = 0;
-    for (int col = 0; col < columnCount; ++col) {
+      // Redraw headers
+      xPos = 0;
+      painter.setFont(headerFont);
+      for (int col = 0; col < columnCount; ++col) {
         QRect headerRect(xPos, yPos, columnWidths[col], rowHeight);
         painter.fillRect(headerRect, Qt::lightGray);
         painter.drawRect(headerRect);
         QString headerText = model->headerData(col, Qt::Horizontal, Qt::DisplayRole).toString();
         painter.drawText(headerRect.adjusted(5, 5, -5, -5), Qt::AlignCenter, headerText);
         xPos += columnWidths[col];
+      }
+      yPos += rowHeight;
+      painter.setFont(contentFont);
     }
-    yPos += rowHeight;
+  }
 
-    // Draw table content
-    QFont contentFont("Arial", 12);
-    painter.setFont(contentFont);
-    for (int row = 0; row < rowCount; ++row) {
-        xPos = 0;
-        QColor rowColor = (row % 2 == 0) ? QColor(240, 240, 240) : Qt::white;
-
-        for (int col = 0; col < columnCount; ++col) {
-            QRect cellRect(xPos, yPos, columnWidths[col], rowHeight);
-            painter.fillRect(cellRect, rowColor);
-            painter.drawRect(cellRect);
-            QString cellText = model->data(model->index(row, col), Qt::DisplayRole).toString();
-            painter.drawText(cellRect.adjusted(5, 5, -5, -5), Qt::AlignLeft | Qt::AlignVCenter, cellText);
-            xPos += columnWidths[col];
-        }
-        yPos += rowHeight;
-
-        // Page overflow handling
-        if (yPos + rowHeight > pdfWriter.height()) {
-            pdfWriter.newPage();
-            yPos = 100;
-
-            // Redraw headers
-            xPos = 0;
-            painter.setFont(headerFont);
-            for (int col = 0; col < columnCount; ++col) {
-                QRect headerRect(xPos, yPos, columnWidths[col], rowHeight);
-                painter.fillRect(headerRect, Qt::lightGray);
-                painter.drawRect(headerRect);
-                QString headerText = model->headerData(col, Qt::Horizontal, Qt::DisplayRole).toString();
-                painter.drawText(headerRect.adjusted(5, 5, -5, -5), Qt::AlignCenter, headerText);
-                xPos += columnWidths[col];
-            }
-            yPos += rowHeight;
-            painter.setFont(contentFont);
-        }
-    }
-
-    painter.end();
-    QMessageBox::information(this, "PDF Export", "PDF successfully created at: " + filePath);
+  painter.end();
+  QMessageBox::information(this, "PDF Export", "PDF successfully created at: " + filePath);
 }
 
 
-void MainWindow::on_Sort_Button_clicked()
-{
-    // Get the sort criterion from the user input (e.g., ComboBox or LineEdit)
-    QString sortBy = ui->sort_criterion->currentText();  // Assuming a QComboBox is used
+void MainWindow::on_Sort_Button_clicked() {
+  // Get the sort criterion from the user input (e.g., ComboBox or LineEdit)
+  QString sortBy = ui->sort_criterion->currentText();  // Assuming a QComboBox is used
 
-    // Prepare the SQL query to fetch all employees from the database
-    QSqlQuery query;
-    QString sortOrder = "ASC";  // Default sort order (ascending)
+  // Prepare the SQL query to fetch all employees from the database
+  QSqlQuery query;
+  QString sortOrder = "ASC";  // Default sort order (ascending)
 
-    if (sortBy == "Nom") {
-        query.prepare("SELECT * FROM MAYSSEM.EMPLOYEES ORDER BY NOM_E " + sortOrder);
-    } else if (sortBy == "Prenom") {
-        query.prepare("SELECT * FROM MAYSSEM.EMPLOYEES ORDER BY PRENOM_E " + sortOrder);
-    } else if (sortBy == "ID") {
-        query.prepare("SELECT * FROM MAYSSEM.EMPLOYEES ORDER BY ID_E " + sortOrder);
-    }
-    else {
-        QMessageBox::warning(this, "Invalid Sort Criterion", "Please select a valid criterion to sort by.");
-        return;
-    }
+  if (sortBy == "Nom") {
+    query.prepare("SELECT * FROM MAYSSEM.EMPLOYEES ORDER BY NOM_E " + sortOrder);
+  } else if (sortBy == "Prenom") {
+    query.prepare("SELECT * FROM MAYSSEM.EMPLOYEES ORDER BY PRENOM_E " + sortOrder);
+  } else if (sortBy == "ID") {
+    query.prepare("SELECT * FROM MAYSSEM.EMPLOYEES ORDER BY ID_E " + sortOrder);
+  } else {
+    QMessageBox::warning(this, "Invalid Sort Criterion", "Please select a valid criterion to sort by.");
+    return;
+  }
 
-    // Execute the query
-    if (query.exec()) {
-        // Create a model to hold the data from the database
-        QSqlQueryModel *model = new QSqlQueryModel();
-        model->setQuery(query);
+  // Execute the query
+  if (query.exec()) {
+    // Create a model to hold the data from the database
+    QSqlQueryModel *model = new QSqlQueryModel();
+    model->setQuery(query);
 
-        // Set the model to the table view to display the sorted data
-        ui->tableView->setModel(model);
-    } else {
-        QMessageBox::critical(this, "Database Error", "Failed to execute query.");
-    }
+    // Set the model to the table view to display the sorted data
+    ui->tableView->setModel(model);
+  } else {
+    QMessageBox::critical(this, "Database Error", "Failed to execute query.");
+  }
 }
 void MainWindow::displayStatistics() {
-    // Verify that 'stat' is indeed a QWidget (it should hold content like charts)
-    if (!ui->Stat) {
-        qDebug() << "'stat' widget is null!";
-        return;
+  // Verify that 'stat' is indeed a QWidget (it should hold content like charts)
+  if (!ui->Stat) {
+    qDebug() << "'stat' widget is null!";
+    return;
+  }
+
+  // Clear any existing charts or widgets in the 'stat' page
+  QLayout *layout = ui->Stat->layout(); // Assuming 'stat' has a layout set
+  if (layout) {
+    QLayoutItem *item;
+    while ((item = layout->takeAt(0))) {
+      delete item->widget();
+      delete item;
     }
+  } else {
+    layout = new QVBoxLayout(ui->Stat); // Create layout if not exists
+    ui->Stat->setLayout(layout);
+  }
 
-    // Clear any existing charts or widgets in the 'stat' page
-    QLayout *layout = ui->Stat->layout(); // Assuming 'stat' has a layout set
-    if (layout) {
-        QLayoutItem *item;
-        while ((item = layout->takeAt(0))) {
-            delete item->widget();
-            delete item;
-        }
-    } else {
-        layout = new QVBoxLayout(ui->Stat); // Create layout if not exists
-        ui->Stat->setLayout(layout);
-    }
+  // Create a map to hold the status counts
+  QMap<QString, int> statusCounts;
+  QSqlQuery query;
 
-    // Create a map to hold the status counts
-    QMap<QString, int> statusCounts;
-    QSqlQuery query;
+  // Prepare and execute the query
+  query.prepare("SELECT SEXE_E, COUNT(*) FROM MAYSSEM.EMPLOYEES GROUP BY SEXE_E");
+  if (!query.exec()) {
+    qDebug() << "SQL Error:" << query.lastError().text();
+    QMessageBox::warning(this, "SQL Error", "Error retrieving statistics.");
+    return;
+  }
 
-    // Prepare and execute the query
-    query.prepare("SELECT SEXE_E, COUNT(*) FROM MAYSSEM.EMPLOYEES GROUP BY SEXE_E");
-    if (!query.exec()) {
-        qDebug() << "SQL Error:" << query.lastError().text();
-        QMessageBox::warning(this, "SQL Error", "Error retrieving statistics.");
-        return;
-    }
+  // Populate statusCounts
+  while (query.next()) {
+    QString etat = query.value(0).toString(); // Delivery state
+    int count = query.value(1).toInt(); // Count for this state
+    statusCounts[etat] = count; // Store in the map
+  }
 
-    // Populate statusCounts
-    while (query.next()) {
-        QString etat = query.value(0).toString(); // Delivery state
-        int count = query.value(1).toInt(); // Count for this state
-        statusCounts[etat] = count; // Store in the map
-    }
+  if (statusCounts.isEmpty()) {
+    QMessageBox::information(this, "Statistics", "No Employees found.");
+    return;
+  }
 
-    if (statusCounts.isEmpty()) {
-        QMessageBox::information(this, "Statistics", "No Employees found.");
-        return;
-    }
+  // Create the pie series and populate it
+  QPieSeries *series = new QPieSeries();
+  for (auto it = statusCounts.constBegin(); it != statusCounts.constEnd(); ++it) {
+    series->append(it.key(), it.value());
+  }
 
-    // Create the pie series and populate it
-    QPieSeries *series = new QPieSeries();
-    for (auto it = statusCounts.constBegin(); it != statusCounts.constEnd(); ++it) {
-        series->append(it.key(), it.value());
-    }
+  // Create the chart
+  QChart *chart = new QChart();
+  chart->addSeries(series);
+  chart->setTitle("Employee Status Statistics");
 
-    // Create the chart
-    QChart *chart = new QChart();
-    chart->addSeries(series);
-    chart->setTitle("Employee Status Statistics");
+  // Create a chart view
+  QChartView *chartView = new QChartView(chart);
+  chartView->setRenderHint(QPainter::Antialiasing);
 
-    // Create a chart view
-    QChartView *chartView = new QChartView(chart);
-    chartView->setRenderHint(QPainter::Antialiasing);
+  // Add the chart view to the stat widget
+  layout->addWidget(chartView); // Add chart view to the layout of the stat widget
 
-    // Add the chart view to the stat widget
-    layout->addWidget(chartView); // Add chart view to the layout of the stat widget
-
-    // Switch to the stat page inside the stacked widget
-    ui->stackedWidget->setCurrentWidget(ui->Stat);  // Assuming 'stackedWidget' is the name of your QStackedWidget
+  // Switch to the stat page inside the stacked widget
+  ui->stackedWidget->setCurrentWidget(ui->Stat);  // Assuming 'stackedWidget' is the name of your QStackedWidget
 }
 bool MainWindow::getEmailAndPassword(int id, QString &email, QString &password) {
-    QSqlQuery query;
-    query.prepare("SELECT EMAIL_E, MDP_E FROM MAYSSEM.EMPLOYEES WHERE ID_E = :id");
-    query.bindValue(":id", id);
-    std::cout<<"id:"<<id<<endl;
+  QSqlQuery query;
+  query.prepare("SELECT EMAIL_E, MDP_E FROM MAYSSEM.EMPLOYEES WHERE ID_E = :id");
+  query.bindValue(":id", id);
+  std::cout << "id:" << id << endl;
 
-    if (query.exec() && query.next()) {
-        email = query.value("EMAIL_E").toString();
-        std::cout<<"email:"<<email.toStdString()<<endl;
-        password = query.value("MDP_E").toString();
-        std::cout<<"password:"<<password.toStdString()<<endl;
-        return true;
-    }
-
-    return false; // ID non trouvé
-}
-/*bool MainWindow::sendEmail(const QString &to, const QString &password) {
-    QString smtpServer = "smtp.gmail.com"; // Exemple : serveur SMTP Gmail
-    int port = 465; // Port SMTP pour TLS
-    QString senderEmail = "our.bankpi@gmail.com"; // Votre email
-    QString senderPassword = "eebt juxz fcmn zngm"; // Mot de passe ou app password
-
-    QString subject = "Récupération de votre mot de passe";
-    QString body = "Bonjour,\n\nVotre mot de passe est : " + password + "\n\nCordialement,\nL'équipe.";
-
-    // Simplification avec Qt (utiliser une bibliothèque plus robuste comme QtSmtpClient si nécessaire)
-    QSslSocket socket;
-    socket.connectToHostEncrypted(smtpServer, port);
-
-    if (!socket.waitForConnected(5000)) {
-        qDebug() << "Erreur de connexion SMTP :" << socket.errorString();
-        return false;
-    }
-
-    socket.write("EHLO example.com\r\n");
-    socket.write("AUTH LOGIN\r\n");
-    socket.write(QByteArray(senderEmail.toUtf8().toBase64() + "\r\n"));
-    socket.write(QByteArray(senderPassword.toUtf8().toBase64() + "\r\n"));
-    socket.write("MAIL FROM:<" + senderEmail.toUtf8() + ">\r\n");
-    socket.write("RCPT TO:<" + to.toUtf8() + ">\r\n");
-    socket.write("DATA\r\n");
-    socket.write("Subject: " + subject.toUtf8() + "\r\n");
-    socket.write(body.toUtf8() + "\r\n.\r\n");
-    socket.write("QUIT\r\n");
-
-    socket.waitForBytesWritten(5000);
-    socket.close();
-
+  if (query.exec() && query.next()) {
+    email = query.value("EMAIL_E").toString();
+    std::cout << "email:" << email.toStdString() << endl;
+    password = query.value("MDP_E").toString();
+    std::cout << "password:" << password.toStdString() << endl;
     return true;
-}*/
+  }
+
+  return false; // ID non trouvé
+}
+
+void MainWindow::on_send_email_button_clicked() {
+  // Récupérer l'ID saisi par l'utilisateur
+  int id = ui->Id_login->text().toInt();
+  std::cout<<"id_here:"<<id<<endl;
+  if (id == 0) {
+    QMessageBox::warning(this, "Erreur", "Veuillez entrer un ID valide.");
+    return;
+  }
+
+  QString email, password;
+
+  // Rechercher l'email et le mot de passe dans la base de données
+  if (!getEmailAndPassword(id, email, password)) {
+    QMessageBox::critical(this, "Erreur", "ID non trouvé dans la base de données.");
+    return;
+  }
+  std::cout << "email-2:" << email.toStdString() << endl;
+  std::cout << "password-2:" << password.toStdString() << endl;
+
+  std::string decrypted_pw = Employees::decryptPassword(password.toStdString());
+  std::cout << "passwor_decryptee:" << decrypted_pw << endl;
+  Mailer mailer = Mailer();
+  mailer.sendEmail(email, "Password_Recovered", QString::fromStdString(decrypted_pw));
+  QMessageBox::information(this, "Send_Email", "Email successfully sent");
+
+}
+
+bool MainWindow::getAnsw1AndAnsw2(int id, QString &answ1, QString &answ2) {
+  QSqlQuery query;
+  query.prepare("SELECT ANSW1_E, ANSW2_E FROM MAYSSEM.EMPLOYEES WHERE ID_E = :id");
+  query.bindValue(":id", id);
+  std::cout << "id:" << id << endl;
+
+  if (query.exec() && query.next()) {
+    answ1 = query.value("ANSW1_E").toString();
+    std::cout << "answ1:" << answ1.toStdString() << endl;
+    answ2 = query.value("ANSW2_E").toString();
+    std::cout << "answ2:" << answ2.toStdString() << endl;
+    return true;
+  }
+
+  return false; // ID non trouvé
+}
 void MainWindow::on_Recover_Button_clicked() {
-
-    mailer m;
-
     // Récupérer l'ID saisi par l'utilisateur
     int id = ui->Id_Recover->text().toInt();
+
     if (id == 0) {
         QMessageBox::warning(this, "Erreur", "Veuillez entrer un ID valide.");
         return;
     }
-
-    QString email, password;
-
-    // Rechercher l'email et le mot de passe dans la base de données
-    if (!getEmailAndPassword(id, email, password)) {
+    QString answ1, answ2;
+    if (!getAnsw1AndAnsw2(id,answ1,answ2)) {
         QMessageBox::critical(this, "Erreur", "ID non trouvé dans la base de données.");
         return;
     }
-    std::cout<<"email-2:"<<email.toStdString()<<endl;
-    std::cout<<"password-2:"<<password.toStdString()<<endl;
-    // Envoyer l'email
-    if (m.sendEmail(QString("mariem.lahbib7@gmail.com"),QString("Password Recovery Email"),QString("AZERRTY"))) {
-        QMessageBox::information(this, "Succès", "Un email contenant votre mot de passe a été envoyé.");
-    } else {
-        QMessageBox::critical(this, "Erreur", "Échec de l'envoi de l'email.");
+    //lire les reponses
+    QString answ1_nouv, answ2_nouv;
+    answ1_nouv=ui->fav_anim_recover->text();
+    answ2_nouv=ui->fav_snack_recover->text();
+    if(!((answ1==answ1_nouv) && (answ2==answ2_nouv)))
+    {       QMessageBox::critical(this, "Erreur", "Reponses incorrectes.");
+        return;
     }
+    ui->stackedWidget_gestions->setCurrentWidget(ui->change_password_page);
 }
+void MainWindow::on_confirm_changed_psw_Button_clicked(){
+       int id = ui->Id_Recover->text().toInt();
+
+        Employees E;
+        //ui->stackedWidget_gestions->setCurrentWidget(ui->change_password_page);
+        QString new_password=ui->changed_password->text();
+        string encrypted_new_psw=E.encryptPassword(new_password.toStdString());
+        QString upd_pw=QString::fromStdString(encrypted_new_psw);
+        bool res=E.update_password(id,upd_pw);
+        if(res){
+
+        QMessageBox::information(this, "Succès", "Le mot de passe a été reinitialisé avec succés.");
+        ui->stackedWidget_gestions->setCurrentWidget(ui->login_page);
+        }
+    }
+
+
 
 
 
