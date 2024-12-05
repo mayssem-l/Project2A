@@ -64,9 +64,12 @@ bool Livraison::supprimer(int id) {
     return true;
 }
 
-bool Livraison::modifier(int id) {
+bool Livraison::modifier(int oldId) {
     QSqlQuery query;
+
+    // Mettez à jour l'ID et les autres champs directement
     query.prepare("UPDATE LIVRAISON SET "
+                  "ID_LIV = :newId, "
                   "DATE_LIV = :dateLiv, "
                   "ADR_LIV = :adresseLiv, "
                   "ETAT_LIV = :etatLiv, "
@@ -74,8 +77,8 @@ bool Livraison::modifier(int id) {
                   "PRENOM_CLIENT = :prenomClient, "
                   "NUM_CLIENT = :numClient, "
                   "PRIX_LIV = :prixLiv "
-                  "WHERE ID_LIV = :idLiv");
-    query.bindValue(":idLiv", id);
+                  "WHERE ID_LIV = :oldId");
+    query.bindValue(":newId", ID_LIV); // Nouvel ID
     query.bindValue(":dateLiv", DATE_LIV);
     query.bindValue(":adresseLiv", ADR_LIV);
     query.bindValue(":etatLiv", ETAT_LIV);
@@ -83,16 +86,17 @@ bool Livraison::modifier(int id) {
     query.bindValue(":prenomClient", PRENOM_CLIENT);
     query.bindValue(":numClient", NUM_CLIENT);
     query.bindValue(":prixLiv", PRIX_LIV);
+    query.bindValue(":oldId", oldId); // Ancien ID
 
     if (!query.exec()) {
         qDebug() << "Erreur SQL lors de la modification:" << query.lastError().text();
         return false;
     }
 
-    // Enregistre l'action dans l'historique
     enregistrerAction("Modification de la livraison avec ID: " + QString::number(ID_LIV));
     return true;
 }
+
 
 QSqlQueryModel* Livraison::afficher() {
     QSqlQueryModel *model = new QSqlQueryModel();

@@ -216,13 +216,13 @@ ui->CONFIRMdeli->setEnabled(false); // Désactiver le bouton de confirmation
 
 void MainWindow::loadClientData(int clientId) {
     QSqlQuery query;
-    query.prepare("SELECT NOM_C, PRENOM_C, NUM_TEL_C, ADRESSE_C FROM clients WHERE ID_C = :id");
+    query.prepare("SELECT NOM_C, FIRST_NAME_C, TEL_C, ADRESSE_C FROM clients WHERE ID_C = :id");
     query.bindValue(":id", clientId);
 
     if (query.exec() && query.next()) {
         ui->FNdeli->setText(query.value("NOM_C").toString());
-        ui->LSdeli->setText(query.value("PRENOM_C").toString());
-        ui->NUMdeli->setText(query.value("NUM_TEL_C").toString());
+        ui->LSdeli->setText(query.value("FIRST_NAME_C").toString());
+        ui->NUMdeli->setText(query.value("TEL_C").toString());
         ui->ADdeli->setText(query.value("ADRESSE_C").toString());
     } else {
         ui->FNdeli->clear();
@@ -352,34 +352,31 @@ void MainWindow::editDelivery() {
         return;
     }
 
-    int deliveryId = deliveryTable->item(currentRow, 0)->text().toInt();
-    currentIdForEditing = deliveryId;
+    int oldDeliveryId = deliveryTable->item(currentRow, 0)->text().toInt();
+    currentIdForEditing = oldDeliveryId;
 
     Livraison livraison;
-    if (livraison.idExists(deliveryId)) {
-        QSqlQuery query;
-        query.prepare("SELECT PRENOM_CLIENT, NOM_CLIENT, NUM_CLIENT, ADR_LIV, PRIX_LIV, ETAT_LIV, DATE_LIV FROM LIVRAISON WHERE ID_LIV = :id");
-        query.bindValue(":id", deliveryId);
+    QSqlQuery query;
+    query.prepare("SELECT PRENOM_CLIENT, NOM_CLIENT, NUM_CLIENT, ADR_LIV, PRIX_LIV, ETAT_LIV, DATE_LIV FROM LIVRAISON WHERE ID_LIV = :id");
+    query.bindValue(":id", oldDeliveryId);
 
-        if (query.exec() && query.next()) {
-            ui->IDdeliv->setText(QString::number(deliveryId));
-            ui->FNdeli->setText(query.value(0).toString());
-            ui->LSdeli->setText(query.value(1).toString());
-            ui->NUMdeli->setText(query.value(2).toString());
-            ui->ADdeli->setText(query.value(3).toString());
-            ui->PRdeli->setText(QString::number(query.value(4).toFloat(), 'f', 2)); // Ensure price is formatted
-            ui->ETdeli->setCurrentText(query.value(5).toString());
-            ui->DATEdeli->setDate(query.value(6).toDate());
+    if (query.exec() && query.next()) {
+        ui->IDdeliv->setText(QString::number(oldDeliveryId));
+        ui->FNdeli->setText(query.value(0).toString());
+        ui->LSdeli->setText(query.value(1).toString());
+        ui->NUMdeli->setText(query.value(2).toString());
+        ui->ADdeli->setText(query.value(3).toString());
+        ui->PRdeli->setText(QString::number(query.value(4).toFloat(), 'f', 2));
+        ui->ETdeli->setCurrentText(query.value(5).toString());
+        ui->DATEdeli->setDate(query.value(6).toDate());
 
-            ui->stackedWidgetdeli->setCurrentWidget(ui->Adddeli);
-            ui->idWarningIcondeli->setVisible(false);
-        } else {
-            QMessageBox::warning(this, "Erreur", "Erreur lors de la récupération des détails de livraison.");
-        }
+        ui->stackedWidgetdeli->setCurrentWidget(ui->Adddeli);
+        ui->idWarningIcondeli->setVisible(false);
     } else {
-        QMessageBox::warning(this, "Erreur", "Aucune livraison trouvée pour cet ID.");
+        QMessageBox::warning(this, "Erreur", "Erreur lors de la récupération des détails de livraison.");
     }
 }
+
 
 void MainWindow::deleteDelivery() {
     QTableWidget *deliveryTable = ui->tableWidgetdeli;
