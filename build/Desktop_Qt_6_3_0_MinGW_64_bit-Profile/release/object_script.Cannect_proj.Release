@@ -1,0 +1,10 @@
+release/Messaging.o
+release/arduino.o
+release/client.o
+release/connection.o
+release/facedatabase.o
+release/main.o
+release/mainwindow.o
+release/messagingwindow.o
+release/moc_mainwindow.o
+release/moc_messagingwindow.o

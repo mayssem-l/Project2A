@@ -1,0 +1,10 @@
+debug/Messaging.o
+debug/arduino.o
+debug/client.o
+debug/connection.o
+debug/facedatabase.o
+debug/main.o
+debug/mainwindow.o
+debug/messagingwindow.o
+debug/moc_mainwindow.o
+debug/moc_messagingwindow.o
