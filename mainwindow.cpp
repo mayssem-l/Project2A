@@ -8,7 +8,7 @@
 #include <QItemSelectionModel>
 #include <QFileDialog>
 #include <QStandardItemModel>
-#include<QHeaderView>
+#include <QHeaderView>
 #include <QtCharts/QChartView>
 #include <QtCharts/QPieSeries>
 #include <QtCharts/QChart>
@@ -20,12 +20,15 @@
 #include <QtNetwork/QTcpSocket>   // Pour la communication via TCP
 #include <QtNetwork/QSslSocket>   // Pour les connexions sécurisées (SSL/TLS)
 #include <QByteArray>
+#include <QObject>
 #include "connection.h"
 #include "mailer.h"
+#include "arduino.h"
 
 using namespace std;
 
 MainWindow::~MainWindow() {
+    delete arduino;
   delete ui;
 }
 void MainWindow::load_list_view() {
@@ -34,17 +37,329 @@ void MainWindow::load_list_view() {
   ui->stackedWidget->setCurrentWidget(ui->list_view);
 
 }
+
+void MainWindow::readarduino()
+{
+
+    int lastIndex;
+    int valueToSend = 42;
+    static QString serialBuffer;
+    QString fin;
+    QString lastLine;
+    QString card_nb,firstName,lastName;
+    QString combined;
+    int attemptsLeft;
+
+
+    QByteArray data = serialPort->readAll();
+    serialBuffer += QString::fromUtf8(data);
+    QStringList lines = serialBuffer.split('\n', Qt::SkipEmptyParts);
+    QString message;
+    cout << "serialBuffer: " << serialBuffer.toStdString() << endl;
+    while (serialBuffer.contains('\n')) {
+        int index = serialBuffer.indexOf('\n'); // Find the delimiter
+        message = serialBuffer.left(index); // Extract the message
+        serialBuffer.remove(0, index + 1); // Remove the processed message and delimiter
+        message.replace(" ", "");
+        message = message.trimmed();
+        // Process the complete message
+        qDebug() << "Received message:" << message;
+    }
+    // for (QString line: lines) {
+    //     cout << "_Line_: " << line.toStdString() << endl;
+    // }
+    // if (!lines.isEmpty()) {
+    //     serialBuffer = "";
+    //     lastLine = lines.last();
+    //     if (lastLine.startsWith("Received:")) {
+    //         lastLine = lastLine.mid(9).trimmed();
+    //         lastLine.erase(lastLine.begin()+9,lastLine.begin()+10);
+    //         fin=lastLine;
+    //     }
+    //     bool conversionOk;
+    //     cout << "Last Line: " << lastLine.toStdString() << endl;
+    //     lastIndex = lastLine.toInt(&conversionOk);
+    //     qDebug() << "---------------->" << fin;
+    //     if (conversionOk) {
+    //         qDebug() << "---------------->" << lastIndex;
+    //     } else {
+    //         qDebug() << "Conversion failed for line:" << lastLine;
+    //     }
+    // } else {
+    //     qDebug() << "No complete lines received yet.";
+    // }
+    // lastLine.remove('\r');
+    // qDebug() << "---------------->" << lastLine;
+    QSqlQuery query;
+    query.prepare("SELECT NOM_E, PRENOM_E, ATTEMPTSLEFT_E FROM MAYSSEM.EMPLOYEES WHERE RFID_E = :rfid");
+    query.bindValue(":rfid", message);
+
+    // Execute the query
+    if (!query.exec()) {
+        qDebug() << "Database query execution error:" << query.lastError().text();
+        return;
+    }
+
+    // Check if a record is found
+    if (query.next()) {
+        // Retrieve the name and last name
+        firstName = query.value("NOM_E").toString();
+        lastName = query.value("PRENOM_E").toString();
+        qDebug() << "Employee found:" << firstName << lastName;
+        attemptsLeft = query.value("ATTEMPTSLEFT_E").toInt();
+        if (attemptsLeft > 0) {
+            // Décrémentez le nombre de tentatives
+            attemptsLeft--;
+            // Mettez à jour la base de données avec le nouveau nombre de tentatives
+            QSqlQuery updateQuery;
+            updateQuery.prepare("UPDATE MAYSSEM.EMPLOYEES SET ATTEMPTSLEFT_E = :attemptsLeft WHERE RFID_E = :rfid");
+            updateQuery.bindValue(":attemptsLeft", attemptsLeft);
+            updateQuery.bindValue(":rfid", message);
+
+            if (!updateQuery.exec()) {
+                qDebug() << "Failed to update attempts:" << updateQuery.lastError().text();
+            } else {
+                qDebug() << "Attempts left updated to:" << attemptsLeft;
+            }
+
+
+        combined = firstName+" "+lastName + '\n';
+        }
+        else {
+            // Accès refusé
+            combined = "\n";
+        }
+
+        QByteArray tosd = combined.toUtf8();
+        qDebug() << "Sending: " << tosd;
+        serialPort->write(tosd);
+
+        /*// Update the ACCESS_STATUS to 1
+        QSqlQuery updateQuery;
+        updateQuery.prepare("UPDATE MAYSSEM.EMPLOYEES SET ACCESS_STATUS = 1 WHERE CARD_NUMBER = :card_num");
+        updateQuery.bindValue(":card_num", lastLine);
+
+        if (!updateQuery.exec()) {
+            qDebug() << "Failed to update ACCESS_STATUS:" << updateQuery.lastError().text();
+        } else {
+            qDebug() << "ACCESS_STATUS updated successfully for CARD_NUMBER:" << lastLine;
+            qDebug() << "---------------->" << firstName+" "+lastName;
+            combined = firstName+" "+lastName + '\n';
+            QByteArray tosd = combined.toUtf8();
+            qDebug() << "Sending: " << tosd;
+            serialPort->write(tosd);
+        }*/
+    } else {
+        qDebug() << "No employee found with RFID_E =" << serialBuffer;
+        qDebug() << "---------------->" << firstName+" "+lastName;
+        combined = '\n';
+        QByteArray tosd = combined.toUtf8();
+        qDebug() << "Sending: " << tosd;
+        serialPort->write(tosd);
+    }
+
+
+
+}
+
+void MainWindow::connect_rfid(){
+    cout << "Incoming message..." << endl;
+    QByteArray data = arduino->read_from_arduino();
+    QString uid = QString::fromStdString(data.toStdString());
+
+    qDebug()<<uid;//pour tester dans la console de
+}
+
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWindow) {
 
 
   Connection c;
   c.createconnect();
+
   ui->setupUi(this);
+  // int ret = arduino->connect_arduino(); // Try to connect to Arduino
+  // switch (ret) {
+  // case 0:
+  //     qDebug() << "Arduino is available and connected to:" << arduino->getarduino_port_name();
+  //     break;
+  // case 1:
+  //     qDebug() << "Arduino is available but not connected to:" << arduino->getarduino_port_name();
+  //     break;
+  // case -1:
+  //     qDebug() << "Arduino is not available";
+  //     break;
+  //     }
+
+  // QObject::connect(A.getserial(), SIGNAL(readyRead()), this, SLOT(connect_rfid()));
+      serialbuffer="";
+      QString portName;
+      foreach (const QSerialPortInfo &info, QSerialPortInfo::availablePorts()) {
+          if (info.portName() == "COM3") {
+              portName = info.portName();
+              qDebug() << "COM3 found.";
+              break;
+          }
+      }
+
+      if (portName.isEmpty()) {
+          qDebug() << "COM3 not found.";
+      }
+      serialPort = new QSerialPort(portName);
+      serialPort->setBaudRate(QSerialPort::Baud9600);
+      serialPort->setDataBits(QSerialPort::Data8);
+      serialPort->setParity(QSerialPort::NoParity);
+      serialPort->setStopBits(QSerialPort::OneStop);
+      connect(serialPort, &QSerialPort::readyRead, this, &MainWindow::readarduino);
+      // Open the serial port
+      if (!serialPort->open(QIODevice::ReadWrite)) {
+          qDebug() << "Failed to open the serial port.";
+          delete serialPort;
+
+      }
+
+// A.read_from_arduino();
+      /*switch (ret) {
+  case 0: // Success
+      qDebug() << "Arduino is available and connected to:" << A.getarduino_port_name();
+      // Connect the readyRead signal to handle incoming data
+      QObject::connect(A.getserial(), &QSerialPort::readyRead, [&]() {
+          QByteArray data = A.read_from_arduino();
+          qDebug() << "Received Data:" << data;
+
+          // Check if the received data contains the UID
+          if (data.startsWith("UID:")) {
+              QString uid = QString::fromUtf8(data.mid(4)); // Extract UID
+              qDebug() << "Extracted UID:" << uid;
+
+              // Process the UID (e.g., database lookup, display, etc.)
+          }
+      });
+      break;
+
+  case 1: // Port available but failed to open
+      qDebug() << "Arduino is available but not connected to:" << A.getarduino_port_name();
+      break;
+
+  case -1: // Arduino not found
+      qDebug() << "Arduino is not available.";
+      break;
+
+  default:
+      qDebug() << "Unexpected error.";
+      break;
+  }
+  int ret=A.connect_arduino(); // lancer la connexion à arduino
+  switch(ret){
+  case(0):qDebug()<< "arduino is available and connected to : "<< A.getarduino_port_name();
+      break;
+  case(1):qDebug() << "arduino is available but not connected to :" <<A.getarduino_port_name();
+      break;
+  case(-1):qDebug() << "arduino is not available";
+      break;
+  }
+
+  if (A.connect_arduino()) {
+      qDebug() << "Arduino connected.";
+      // Connect the readyRead signal to a slot or lambda to handle incoming data
+      QObject::connect(A.getserial(), &QSerialPort::readyRead, [&]() {
+          QByteArray data = A.read_from_arduino();
+          qDebug() << "Received Data:" << data;
+
+          // Check if the received data contains the UID
+          if (data.startsWith("UID:")) {
+              QString uid = QString::fromUtf8(data.mid(4)); // Extract UID from the data
+              qDebug() << "Extracted UID:" << uid;
+
+              // Process the UID, e.g., check it against a database, display it, etc.
+          }
+      });
+  } else {
+      qDebug() << "Failed to connect to Arduino.";
+  }
+
+  QByteArray buffer; // Buffer to store incomplete messages
+  QObject::connect(A.getserial(), &QSerialPort::readyRead, [&]() {
+      cout << "Entered Here1" << endl;
+      if (!A.getserial()) {
+          qDebug() << "Serial object is null!";
+          return;
+      }
+      cout << "Entered Here3" << endl;
+
+      if (!A.getserial()->isOpen()) {
+          qDebug() << "Serial port is not open!";
+          return;
+      }
+
+      cout << "Entered Here4" << endl;
+
+      // Check if data is available before reading
+      if (A.getserial()->bytesAvailable() > 0) {
+          cout << "Entered Here2" << endl;
+          buffer.append(A.getserial()->readAll()); // Append new data to the buffer
+          cout << "Entered Here2" << endl;
+
+          // Check for complete messages
+          while (buffer.contains('\n')) {
+              int index = buffer.indexOf('\n'); // Find the delimiter
+              QByteArray message = buffer.left(index); // Extract the message
+              buffer.remove(0, index + 1); // Remove the processed message and delimiter
+
+              // Process the complete message
+              qDebug() << "Received message:" << message;
+          }
+      } else {
+          qDebug() << "No data available to read.";
+      }
+  });
+  QObject::connect(A.getserial(), &QSerialPort::readyRead, [&]() {
+      cout << "Entered Here1" << endl;
+      buffer.append(A.getserial()->readAll()); // Append new data to the buffer
+      cout << "Entered Here2" << endl;
+      // Check for complete messages
+      while (buffer.contains('\n')) {
+          int index = buffer.indexOf('\n'); // Find the delimiter
+          QByteArray message = buffer.left(index); // Extract the message
+          buffer.remove(0, index + 1); // Remove the processed message and delimiter
+
+          // Process the complete message
+          qDebug() << "Received message:" << message;
+      }
+  });
+  QObject::connect(A.getserial(), &QSerialPort::readyRead, [&]() {
+
+      static QByteArray buffer; // Buffer to accumulate data
+
+      QByteArray data = A.read_from_arduino(); // Use your custom function to read data
+      buffer.append(data); // Append the data to the buffer
+
+      int endIndex;
+      while ((endIndex = buffer.indexOf('\n')) != -1) { // Look for complete lines
+          QByteArray line = buffer.left(endIndex).trimmed(); // Extract the line
+          buffer.remove(0, endIndex + 1); // Remove the processed line from buffer
+
+          qDebug() << "Received Data:" << line; // Process and print the line
+
+          // Process specific lines, e.g., lines containing a UID
+          if (line.startsWith("UID:")) {
+              QString uid = QString::fromUtf8(line.mid(4)); // Extract UID after "UID:"
+              qDebug() << "Extracted UID:" << uid;
+
+              // Handle the UID logic here (e.g., database queries, updates, etc.)
+          }
+      }
+  });*/
+
+ // QObject::connect(A.getserial(), &QSerialPort::readyRead, [&](){
+ //      cout << "Entered Here" << endl;
+ //      QByteArray data = A.read_from_arduino();
+  //}); // permet de lancer
+  //le slot update_label suite à la reception du signal readyRead (reception des données).
+
 
   ui->stackedWidget_gestions->setCurrentWidget(ui->login_page);
   /*ui->Id_login->clear();
   ui->Password_login->clear();*/
-
   //load_list_view();
 
   // Connexion des boutons aux pages correspondantes du QStackedWidget
@@ -673,7 +988,8 @@ void MainWindow::on_Recover_Button_clicked() {
     }
     ui->stackedWidget_gestions->setCurrentWidget(ui->change_password_page);
 }
-void MainWindow::on_confirm_changed_psw_Button_clicked(){
+void MainWindow::on_confirm_changed_psw_Button_clicked()
+{
        int id = ui->Id_Recover->text().toInt();
 
         Employees E;
@@ -682,12 +998,49 @@ void MainWindow::on_confirm_changed_psw_Button_clicked(){
         string encrypted_new_psw=E.encryptPassword(new_password.toStdString());
         QString upd_pw=QString::fromStdString(encrypted_new_psw);
         bool res=E.update_password(id,upd_pw);
-        if(res){
-
+        if(res)
+        {
         QMessageBox::information(this, "Succès", "Le mot de passe a été reinitialisé avec succés.");
         ui->stackedWidget_gestions->setCurrentWidget(ui->login_page);
-        }
+        }       
+}
+/*void MainWindow::readRFIDTag() {
+    Arduino a;
+    QByteArray data = a.read_from_arduino();
+    QString message = QString(data).trimmed();
+    //cout<<"message:"<<message.toStdString()<<endl;
+
+    if (message.startsWith("UID:")) {
+        QString rfidTag = message.mid(4); // Extraire l'UID
+        qDebug() << "Tag detected:" << rfidTag;
+
+        // Chercher l'UID dans la base de données
+        checkUIDInDatabase(rfidTag);
     }
+}
+
+void MainWindow::checkUIDInDatabase(const QString &rfidTag) {
+    QSqlQuery query;
+    Arduino a;
+    query.prepare("SELECT COUNT(*) FROM MAYSSEM.EMPLOYEES WHERE RFID_E = :rfid");
+    query.bindValue(":rfid", rfidTag);
+
+    if (query.exec() && query.next()) {
+        int count = query.value(0).toInt();
+        if (count > 0) {
+            qDebug() << "Access granted for tag:" << rfidTag;
+            a.write_to_arduino("ACCESS_GRANTED\n");
+        } else {
+            qDebug() << "Access denied for tag:" << rfidTag;
+            a.write_to_arduino("ACCESS_DENIED\n");
+        }
+    } else {
+        qDebug() << "Database error: " << query.lastError().text();
+        a.write_to_arduino("ACCESS_DENIED\n");
+    }
+}*/
+
+
 
 
 

@@ -7,6 +7,7 @@
 #include <QDebug>
 class Arduino
 {
+
 public:
     Arduino();
     //méthodes de la classe Arduino
@@ -21,6 +22,7 @@ private:
     //et des fonctions (envoi, lecture de réception,…) sur ce qu’est une voie série pour Arduino.
     static const quint16 arduino_uno_vendor_id=9025;
     static const quint16 arduino_uno_producy_id=67;
+
     QString arduino_port_name;
     bool arduino_is_available;
     QByteArray data;  // contenant les données lues à partir d'Arduino

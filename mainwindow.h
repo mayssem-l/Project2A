@@ -2,7 +2,7 @@
 #define MAINWINDOW_H
 #include"employees.h"
 #include <QMainWindow>
-
+#include <arduino.h>
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
@@ -17,6 +17,12 @@ class MainWindow : public QMainWindow {
   MainWindow(QWidget *parent = nullptr);
   ~MainWindow();
   void load_list_view();
+  QSerialPort *serialPort;
+  QByteArray serialData;
+  QString serialbuffer;
+  Arduino *arduino;
+  void connect_rfid();
+  void readarduino();
  signals:
   void loginSuccessful(const QString &role);
 
@@ -38,6 +44,8 @@ class MainWindow : public QMainWindow {
   //bool sendEmail(const QString &to, const QString &password);
   bool getEmailAndPassword(int id, QString &email, QString &password);
   void on_send_email_button_clicked();
+  //void readRFIDTag();
+  //void checkUIDInDatabase(const QString &rfidTag);
 
 
  private:
