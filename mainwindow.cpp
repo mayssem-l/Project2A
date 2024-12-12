@@ -1601,7 +1601,7 @@ void MainWindow::displayStatistics_client() {
 //Yassmine
 
 void MainWindow::displayHistorique() {
-    QFile file("C:/Users/Lenovo/Desktop/3awedcrud/hhh/historique.txt");
+    QFile file("C:/Users/merie/Documents/GS_Employees_versionfinale/GS_Employees_Clients_Livraisons/historique.txt");
 
     // Assurez-vous que le fichier est créé s'il n'existe pas
     if (!file.exists()) {

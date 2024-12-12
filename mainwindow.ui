@@ -4718,7 +4718,7 @@ color: rgb(148, 125, 66);</string>
          </rect>
         </property>
         <property name="currentIndex">
-         <number>1</number>
+         <number>3</number>
         </property>
         <widget class="QWidget" name="LISTdeli">
          <widget class="QToolButton" name="Searchdeli">

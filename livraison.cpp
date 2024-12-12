@@ -124,7 +124,7 @@ bool Livraison::idExists(int id) {
 }
 
 void Livraison::enregistrerAction(const QString &actionDescription) {
-    QFile file("C:/Users/Lenovo/Desktop/3awedcrud/hhh/historique.txt");
+    QFile file("C:/Users/merie/Documents/GS_Employees_versionfinale/GS_Employees_Clients_Livraisons/historique.txt");
 
     if (file.open(QIODevice::Append | QIODevice::Text)) {
         QTextStream out(&file);
