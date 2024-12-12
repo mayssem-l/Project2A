@@ -3,8 +3,18 @@
 #include"employees.h"
 #include <QMainWindow>
 #include <arduino.h>
-
+#include <QLineEdit>
+#include <QStackedWidget>
+#include <QTextEdit>
+#include <QSqlQueryModel>
+#include <QMessageBox>
+#include <QDesktopServices>
+#include <QUrl>
+#include <QString>
+#include <QList>
 QT_BEGIN_NAMESPACE
+
+struct Delivery { QString phoneNumber;};
 namespace Ui {
 class MainWindow;
 }
@@ -16,6 +26,10 @@ class MainWindow : public QMainWindow {
 public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
+    //Yassmine
+    QSqlQueryModel* getDeliveriesModel();
+    QString getSelectedDeliveryClientPhoneNumber();
+    //Mayssem
     void load_list_view_employee();
     QSerialPort *serialPort;
     QByteArray serialData;
@@ -64,8 +78,32 @@ private slots:
     void exportTableToPDF();
     void displayStatistics_client();
 
+    //Yassmine
+    void loadClientData(int clientId) ;
+    void validateClientId(const QString &text);
+    void checkClientIdExists(const QString &text);
+    void addDELIVERY(bool isConfirm);
+    void clearInputFields();
+    void displayDeliveries();
+    void validateID(const QString &text);
+    void validateFields(const QString &text);
+    void deleteDelivery();
+    void editDelivery();
+    void checkIdExists(const QString &text);
+    void highlightField(QLineEdit *field, bool isValid);
+    void searchDelivery();
+    void trie();
+    void displayStatistics_livraison();
+    void displayHistorique();
+    void exportPDF();
+    void onSmsButtonClicked();
+
 
 private:
     Ui::MainWindow* ui;
+    int currentIdForEditing = -1; // Variable à suivre pour l'édition
+    QStackedWidget *stat;
+    QList<Delivery> deliveries;
+    int currentSelectedIndex;
 };
 #endif // MAINWINDOW_H

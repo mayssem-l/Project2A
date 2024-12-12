@@ -7,6 +7,7 @@ SOURCES += \
     client.cpp \
     connection.cpp \
     employees.cpp \
+    livraison.cpp \
     mailer.cpp \
     main.cpp \
     mainwindow.cpp \
@@ -18,6 +19,7 @@ HEADERS += \
     client.h \
     connection.h \
     employees.h \
+    livraison.h \
     mailer.h \
     mainwindow.h \
     messagingwindow.h
