@@ -32,6 +32,7 @@
 #include <QFile>
 #include <QTextStream>
 #include <QPageSize>
+#include <QTimer>
 #include "connection.h"
 #include "mailer.h"
 #include "arduino.h"
@@ -143,8 +144,16 @@ void MainWindow::readarduino()
                 qDebug() << "Attempts left updated to:" << attemptsLeft;
             }
 
-
+            ui->Employee_name->setText(firstName+" "+lastName);
+            ui->Employee_RFID->setText(message);
+            ui->RFID_Status->setText("Just Entered");
+            QTimer::singleShot(3000, this, [this]() {
+                ui->Employee_name->clear();
+                ui->Employee_RFID->clear();
+                ui->RFID_Status->setText("Waiting...");
+            });
             combined = firstName+" "+lastName + '\n';
+
         }
         else {
             // Accès refusé
@@ -154,7 +163,6 @@ void MainWindow::readarduino()
         QByteArray tosd = combined.toUtf8();
         qDebug() << "Sending: " << tosd;
         serialPort->write(tosd);
-
         /*// Update the ACCESS_STATUS to 1
         QSqlQuery updateQuery;
         updateQuery.prepare("UPDATE MAYSSEM.EMPLOYEES SET ACCESS_STATUS = 1 WHERE CARD_NUMBER = :card_num");
