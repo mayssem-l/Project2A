@@ -49,6 +49,7 @@ private slots:
     void on_confirm_edit_clicked();
     void recherche_emp();
     void on_cancel_search_button_clicked();
+    void on_log_out_button_clicked();
     void on_Login_Button_clicked();
     //void on_export_pdf_button_clicked();
     void exportToPDF();

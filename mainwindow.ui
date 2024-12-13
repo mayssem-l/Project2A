@@ -90,6 +90,9 @@ border-radius:15px;</string>
        <property name="text">
         <string/>
        </property>
+       <property name="echoMode">
+        <enum>QLineEdit::Password</enum>
+       </property>
       </widget>
       <widget class="QLabel" name="label_3">
        <property name="geometry">
@@ -797,7 +800,7 @@ border: 2px solid black;</string>
        <widget class="QLabel" name="label_11">
         <property name="geometry">
          <rect>
-          <x>160</x>
+          <x>120</x>
           <y>630</y>
           <width>41</width>
           <height>41</height>
@@ -816,7 +819,7 @@ border: 2px solid black;</string>
        <widget class="QLabel" name="label_12">
         <property name="geometry">
          <rect>
-          <x>60</x>
+          <x>40</x>
           <y>630</y>
           <width>41</width>
           <height>41</height>
@@ -886,6 +889,35 @@ border: 2px solid black;</string>
         </property>
         <property name="scaledContents">
          <bool>true</bool>
+        </property>
+       </widget>
+       <widget class="QPushButton" name="log_out_button">
+        <property name="geometry">
+         <rect>
+          <x>170</x>
+          <y>630</y>
+          <width>71</width>
+          <height>41</height>
+         </rect>
+        </property>
+        <property name="styleSheet">
+         <string notr="true">border: 2px solid black;
+background-color: rgb(255, 251, 189);
+	
+
+	background-color: rgb(139, 21, 21);
+background-color: rgb(97, 0, 0);
+background-color: rgb(116, 88, 53);
+border-radius: 15px;
+</string>
+        </property>
+        <property name="text">
+         <string>Log out</string>
+        </property>
+        <property name="icon">
+         <iconset>
+          <normalon>../../../Downloads/check-out (1) (1).png</normalon>
+         </iconset>
         </property>
        </widget>
       </widget>
@@ -987,7 +1019,7 @@ border-radius:30px;
         <string notr="true">background-color: rgb(255, 255, 255);</string>
        </property>
        <property name="currentIndex">
-        <number>2</number>
+        <number>1</number>
        </property>
        <widget class="QWidget" name="list_view">
         <widget class="QPushButton" name="Search_Button">
@@ -1854,24 +1886,6 @@ border_radius:10px;</string>
            <string/>
           </property>
          </widget>
-         <widget class="QLineEdit" name="poste_add">
-          <property name="geometry">
-           <rect>
-            <x>600</x>
-            <y>160</y>
-            <width>151</width>
-            <height>51</height>
-           </rect>
-          </property>
-          <property name="styleSheet">
-           <string notr="true">background-color: rgb(255, 255, 255);
-color: rgb(0, 0, 0);
-border_radius:10px;</string>
-          </property>
-          <property name="text">
-           <string/>
-          </property>
-         </widget>
          <widget class="QLineEdit" name="mdp_add">
           <property name="geometry">
            <rect>
@@ -2160,7 +2174,7 @@ border_radius:10px;</string>
           <property name="geometry">
            <rect>
             <x>600</x>
-            <y>450</y>
+            <y>440</y>
             <width>151</width>
             <height>51</height>
            </rect>
@@ -2201,6 +2215,45 @@ border-color: rgb(255, 255, 255);</string>
           <property name="alignment">
            <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
           </property>
+         </widget>
+         <widget class="QComboBox" name="poste_add">
+          <property name="geometry">
+           <rect>
+            <x>600</x>
+            <y>160</y>
+            <width>151</width>
+            <height>51</height>
+           </rect>
+          </property>
+          <property name="styleSheet">
+           <string notr="true">background-color: rgb(255, 255, 255);
+color: rgb(0, 0, 0);</string>
+          </property>
+          <item>
+           <property name="text">
+            <string>RH</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>Service_Client</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>Technicien</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>Livreur</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>Chef_de_produit</string>
+           </property>
+          </item>
          </widget>
         </widget>
        </widget>
@@ -2571,24 +2624,6 @@ border_radius:10px;</string>
            <string/>
           </property>
          </widget>
-         <widget class="QLineEdit" name="poste_edit">
-          <property name="geometry">
-           <rect>
-            <x>600</x>
-            <y>160</y>
-            <width>151</width>
-            <height>51</height>
-           </rect>
-          </property>
-          <property name="styleSheet">
-           <string notr="true">background-color: rgb(255, 255, 255);
-color: rgb(0, 0, 0);
-border_radius:10px;</string>
-          </property>
-          <property name="text">
-           <string/>
-          </property>
-         </widget>
          <widget class="QLineEdit" name="mdp_edit">
           <property name="geometry">
            <rect>
@@ -2872,6 +2907,45 @@ border-color: rgb(255, 255, 255);</string>
           <property name="alignment">
            <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
           </property>
+         </widget>
+         <widget class="QComboBox" name="poste_edit">
+          <property name="geometry">
+           <rect>
+            <x>600</x>
+            <y>160</y>
+            <width>151</width>
+            <height>51</height>
+           </rect>
+          </property>
+          <property name="styleSheet">
+           <string notr="true">background-color: rgb(255, 255, 255);
+color: rgb(0, 0, 0);</string>
+          </property>
+          <item>
+           <property name="text">
+            <string>RH</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>Service_Client</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>Technicien</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>Livreur</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>Chef_de_produit</string>
+           </property>
+          </item>
          </widget>
         </widget>
        </widget>

@@ -207,9 +207,6 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
 
     ui->setupUi(this);
     ui->stackedWidget_gestions->setCurrentWidget(ui->login_page);
-    /*ui->Id_login->clear();
-  ui->Password_login->clear();*/
-    //load_list_view();
 
     // Connexion des boutons aux pages correspondantes du QStackedWidget
     connect(ui->List_Button, &QPushButton::clicked, this, &MainWindow::load_list_view_employee );
@@ -220,15 +217,6 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     connect(ui->forgotpassword_Button, &QPushButton::clicked, this, [ = ]() {
         ui->stackedWidget_gestions->setCurrentWidget(ui->recover_password);
     });
-
-    /*connect(ui->Stat_Button, &QPushButton::clicked, this, [=]() {
-      ui->stackedWidget->setCurrentWidget(ui->Stat);  // Affiche la page statemp
-  });*/
-
-    /*connect(ui->Edit_Button, &QPushButton::clicked, this, [=]() {
-      ui->stackedWidget->setCurrentWidget(ui->Edit);  // Affiche la page modemp
-  });*/
-
 
     ui->tableView->setSelectionBehavior(QAbstractItemView::SelectRows);
     ui->tableView->setSelectionMode(QAbstractItemView::SingleSelection);
@@ -271,21 +259,6 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     connect(ui->cancel_search_button_Client, &QPushButton::clicked, this, &MainWindow::on_cancel_search_client_clicked);
     connect(ui->Stat_Button_Client, &QPushButton::clicked, this, &MainWindow::displayStatistics_client);
 
-    // In MainWindow constructor or setup function
-    // int ret = arduino->connect_arduino(); // Try to connect to Arduino
-    // switch (ret) {
-    // case 0:
-    //     qDebug() << "Arduino is available and connected to:" << arduino->getarduino_port_name();
-    //     break;
-    // case 1:
-    //     qDebug() << "Arduino is available but not connected to:" << arduino->getarduino_port_name();
-    //     break;
-    // case -1:
-    //     qDebug() << "Arduino is not available";
-    //     break;
-    //     }
-
-    // QObject::connect(A.getserial(), SIGNAL(readyRead()), this, SLOT(connect_rfid()));
     serialbuffer="";
     QString portName;
     foreach (const QSerialPortInfo &info, QSerialPortInfo::availablePorts()) {
@@ -311,146 +284,6 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
         delete serialPort;
 
     }
-
-    // A.read_from_arduino();
-    /*switch (ret) {
-  case 0: // Success
-      qDebug() << "Arduino is available and connected to:" << A.getarduino_port_name();
-      // Connect the readyRead signal to handle incoming data
-      QObject::connect(A.getserial(), &QSerialPort::readyRead, [&]() {
-          QByteArray data = A.read_from_arduino();
-          qDebug() << "Received Data:" << data;
-
-          // Check if the received data contains the UID
-          if (data.startsWith("UID:")) {
-              QString uid = QString::fromUtf8(data.mid(4)); // Extract UID
-              qDebug() << "Extracted UID:" << uid;
-
-              // Process the UID (e.g., database lookup, display, etc.)
-          }
-      });
-      break;
-
-  case 1: // Port available but failed to open
-      qDebug() << "Arduino is available but not connected to:" << A.getarduino_port_name();
-      break;
-
-  case -1: // Arduino not found
-      qDebug() << "Arduino is not available.";
-      break;
-
-  default:
-      qDebug() << "Unexpected error.";
-      break;
-  }
-  int ret=A.connect_arduino(); // lancer la connexion à arduino
-  switch(ret){
-  case(0):qDebug()<< "arduino is available and connected to : "<< A.getarduino_port_name();
-      break;
-  case(1):qDebug() << "arduino is available but not connected to :" <<A.getarduino_port_name();
-      break;
-  case(-1):qDebug() << "arduino is not available";
-      break;
-  }
-
-  if (A.connect_arduino()) {
-      qDebug() << "Arduino connected.";
-      // Connect the readyRead signal to a slot or lambda to handle incoming data
-      QObject::connect(A.getserial(), &QSerialPort::readyRead, [&]() {
-          QByteArray data = A.read_from_arduino();
-          qDebug() << "Received Data:" << data;
-
-          // Check if the received data contains the UID
-          if (data.startsWith("UID:")) {
-              QString uid = QString::fromUtf8(data.mid(4)); // Extract UID from the data
-              qDebug() << "Extracted UID:" << uid;
-
-              // Process the UID, e.g., check it against a database, display it, etc.
-          }
-      });
-  } else {
-      qDebug() << "Failed to connect to Arduino.";
-  }
-
-  QByteArray buffer; // Buffer to store incomplete messages
-  QObject::connect(A.getserial(), &QSerialPort::readyRead, [&]() {
-      cout << "Entered Here1" << endl;
-      if (!A.getserial()) {
-          qDebug() << "Serial object is null!";
-          return;
-      }
-      cout << "Entered Here3" << endl;
-
-      if (!A.getserial()->isOpen()) {
-          qDebug() << "Serial port is not open!";
-          return;
-      }
-
-      cout << "Entered Here4" << endl;
-
-      // Check if data is available before reading
-      if (A.getserial()->bytesAvailable() > 0) {
-          cout << "Entered Here2" << endl;
-          buffer.append(A.getserial()->readAll()); // Append new data to the buffer
-          cout << "Entered Here2" << endl;
-
-          // Check for complete messages
-          while (buffer.contains('\n')) {
-              int index = buffer.indexOf('\n'); // Find the delimiter
-              QByteArray message = buffer.left(index); // Extract the message
-              buffer.remove(0, index + 1); // Remove the processed message and delimiter
-
-              // Process the complete message
-              qDebug() << "Received message:" << message;
-          }
-      } else {
-          qDebug() << "No data available to read.";
-      }
-  });
-  QObject::connect(A.getserial(), &QSerialPort::readyRead, [&]() {
-      cout << "Entered Here1" << endl;
-      buffer.append(A.getserial()->readAll()); // Append new data to the buffer
-      cout << "Entered Here2" << endl;
-      // Check for complete messages
-      while (buffer.contains('\n')) {
-          int index = buffer.indexOf('\n'); // Find the delimiter
-          QByteArray message = buffer.left(index); // Extract the message
-          buffer.remove(0, index + 1); // Remove the processed message and delimiter
-
-          // Process the complete message
-          qDebug() << "Received message:" << message;
-      }
-  });
-  QObject::connect(A.getserial(), &QSerialPort::readyRead, [&]() {
-
-      static QByteArray buffer; // Buffer to accumulate data
-
-      QByteArray data = A.read_from_arduino(); // Use your custom function to read data
-      buffer.append(data); // Append the data to the buffer
-
-      int endIndex;
-      while ((endIndex = buffer.indexOf('\n')) != -1) { // Look for complete lines
-          QByteArray line = buffer.left(endIndex).trimmed(); // Extract the line
-          buffer.remove(0, endIndex + 1); // Remove the processed line from buffer
-
-          qDebug() << "Received Data:" << line; // Process and print the line
-
-          // Process specific lines, e.g., lines containing a UID
-          if (line.startsWith("UID:")) {
-              QString uid = QString::fromUtf8(line.mid(4)); // Extract UID after "UID:"
-              qDebug() << "Extracted UID:" << uid;
-
-              // Handle the UID logic here (e.g., database queries, updates, etc.)
-          }
-      }
-  });*/
-
-    // QObject::connect(A.getserial(), &QSerialPort::readyRead, [&](){
-    //      cout << "Entered Here" << endl;
-    //      QByteArray data = A.read_from_arduino();
-    //}); // permet de lancer
-    //le slot update_label suite à la reception du signal readyRead (reception des données).
-
 
     //Yassmine
     const QRegularExpression idRegex("^\\d{1,9}$");
@@ -549,16 +382,20 @@ void MainWindow::on_Login_Button_clicked() {
         if (role == "RH") {
             // Switch to Employee Management Interface
             ui->stackedWidget_gestions->setCurrentWidget(ui->employees_page);
-        } else if (role == "service_client") {
+        } else if (role == "Service_Client") {
             // Switch to Client Management Interface
             ui->stackedWidget_gestions->setCurrentWidget(ui->clients_page);
-        } else if (role == "technicien") {
+        } else if (role == "Technicien") {
             // Switch to Equipment Management Interface
             ui->stackedWidget_gestions->setCurrentWidget(ui->equipments_page);
         }
-        else if (role == "livreur") {
+        else if (role == "Livreur") {
             // Switch to Equipment Management Interface
             ui->stackedWidget_gestions->setCurrentWidget(ui->delivery_page);
+        }
+        else if (role == "Chef_de_produit") {
+            // Switch to Equipment Management Interface
+            ui->stackedWidget_gestions->setCurrentWidget(ui->products_page);
         }
         else {
             // Handle unknown roles
@@ -569,6 +406,13 @@ void MainWindow::on_Login_Button_clicked() {
     } else {
         QMessageBox::critical(this, "Erreur", "ID ou mot de passe incorrect.");
     }
+
+}
+void MainWindow::on_log_out_button_clicked()
+{
+    ui->Id_login->clear();
+    ui->Password_login->clear();
+    ui->stackedWidget_gestions->setCurrentWidget(ui->login_page);
 
 }
 
@@ -590,7 +434,7 @@ void MainWindow::on_confirm_add_clicked() {
     QString Adresse_E = ui->adr_add->text();
     QString Email_E = ui->email_add->text();
     QString Tel_E = ui->tel_add->text();
-    QString Poste_E = ui->poste_add->text(); // Utilise la méthode `date()` pour récupérer une date
+    QString Poste_E = ui->poste_add->currentText(); // Utilise la méthode `date()` pour récupérer une date
     QString Mdp_E = ui->mdp_add->text();
     QString Sexe_E = ui->gender_add->currentText();
     QString Answ1_E = ui->fav_anim_add->text();
@@ -724,7 +568,7 @@ void MainWindow::on_edit_clicked() {
     ui->adr_edit->setText(adresse_E);
     ui->email_edit->setText(email_E);
     ui->tel_edit->setText(tel_E);
-    ui->poste_edit->setText(poste_E);
+    ui->poste_edit->setCurrentText(poste_E);
     ui->mdp_edit->setText(mdp_E);
     ui->gender_edit->setCurrentText(sexe_E);
     ui->fav_anim_edit->setText(Answ1_E);
@@ -751,7 +595,7 @@ void MainWindow::on_confirm_edit_clicked() {
     QString Adresse_E = ui->adr_edit->text();
     QString Email_E = ui->email_edit->text();
     QString Tel_E = ui->tel_edit->text();
-    QString Poste_E = ui->poste_edit->text(); // Utilise la méthode `date()` pour récupérer une date
+    QString Poste_E = ui->poste_edit->currentText(); // Utilise la méthode `date()` pour récupérer une date
     QString Mdp_E = ui->mdp_edit->text();
     QString Sexe_E = ui->gender_edit->currentText();
     QString Answ1_E = ui->fav_anim_edit->text();
@@ -818,50 +662,6 @@ void MainWindow::on_cancel_search_button_clicked() {
     ui->tableView->setModel(E.afficher());
 
 }
-/*void MainWindow::exportToPDF() {
-    QString fileName = QFileDialog::getSaveFileName(this, "Save File", "", "PDF Files (*.pdf)");
-    if (fileName.isEmpty()) return;
-
-    // Create a PDF writer
-    QPdfWriter pdfWriter(fileName);
-    pdfWriter.setPageSize(QPageSize(QPageSize::A4));
-
-    // Create a painter
-    QPainter painter(&pdfWriter);
-    painter.setFont(QFont("Times", 12));
-
-    // Table headers
-    QStringList headers = QStringList() << "ID" << "NOM" << "PRENOM" << "DATE_NAISSANCE" << "ADRESSE" << "EMAIL" << "TELEPHONE" << "POSTE" << "MDP" << "SEXE";
-    int rowHeight = 20;
-    int columnWidth = 100;
-
-    // Draw headers
-    for (int i = 0; i < headers.size(); ++i) {
-        painter.drawText(i*columnWidth, rowHeight, headers[i]);
-    }
-
-    // Draw a line
-    painter.drawLine(0, rowHeight + 5, columnWidth * headers.size(), rowHeight + 5);
-    rowHeight += 25;
-
-    // Fetch deliveries from the model
-    QSqlQueryModel * model = new QSqlQueryModel();
-    Employees Emp;
-    model = Emp.afficher();
-    int rowCount = model->rowCount();
-
-    // Populate the PDF with the data
-    for (int row = 0; row < rowCount; ++row) {
-        for (int column = 0; column < headers.size(); ++column) {
-            QString itemText = model->data(model->index(row, column)).toString();
-            painter.drawText(column*columnWidth, rowHeight, itemText);
-        }
-        rowHeight += 20;  // Move to next row
-    }
-
-    painter.end();
-    QMessageBox::information(this, "Export Successful", "Le fichier PDF a été effectué avec succès ");
-}*/
 
 void MainWindow::exportToPDF() {
     QString filePath = QFileDialog::getSaveFileName(this, "Save PDF", "", "*.pdf");
