@@ -110,6 +110,7 @@ public:
     string encryptPassword(const string& password);
     static string decryptPassword(const string& encrypted);
     bool update_password(int id , const QString &upd_pw);
+    int getNextId();
 };
 
 #endif // EMPLOYEES_H

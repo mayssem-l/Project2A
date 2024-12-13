@@ -50,9 +50,18 @@ string Employees::decryptPassword(const string &password) {
     return decrypted;
 }
 
+int Employees::getNextId() {
+    QSqlQuery query;
+    query.prepare("SELECT MAX(ID_E) FROM MAYSSEM.EMPLOYEES;");
+    if (query.exec()) {
+        if (query.next()) {
+            return query.value(0).toInt() + 1;  // Incrémente l'ID de 1
+        }
+    }
+    return 1;  // Si la table est vide, commence à 1
+}
 
-
-bool Employees::ajouter() {
+/*bool Employees::ajouter() {
     QSqlQuery query;
 
     query.prepare("INSERT INTO MAYSSEM.EMPLOYEES VALUES(:id_emp,:nom_emp,:prenom_emp,TO_DATE(:date_nais,'yyyy-MM-dd'),:add_emp,:email_emp,:tel_emp,:poste_emp,:mdp_emp,:sexe_emp,:Answ1_emp,:Answ2_emp,:rfid_emp,:attempts_emp);");
@@ -84,7 +93,7 @@ bool Employees::ajouter() {
     }
 
     return res;
-}
+}*/
 
 QSqlQueryModel* Employees::afficher() {
     QSqlQueryModel * model = new QSqlQueryModel();
@@ -107,11 +116,41 @@ QSqlQueryModel* Employees::afficher() {
 
     return model;
 }
+bool Employees::ajouter() {
+    // Récupérer l'ID suivant
+    int nextId = getNextId();
+
+    // Préparer la requête d'insertion sans inclure l'ID
+    QSqlQuery query;
+    query.prepare("INSERT INTO MAYSSEM.EMPLOYEES (id_e, nom_e, prenom_e, date_naissance, adresse_e, email_e, tel_e, poste_e, mdp_e, sexe_e, Answ1_e, Answ2_e, rfid_e, attempts_e) "
+                  "VALUES (:id_emp, :nom_emp, :prenom_emp, TO_DATE(:date_nais, 'yyyy-MM-dd'), :add_emp, :email_emp, :tel_emp, :poste_emp, :mdp_emp, :sexe_emp, :Answ1_emp, :Answ2_emp, :rfid_emp, :attempts_emp);");
+
+    query.bindValue(":id_emp", nextId);  // Utiliser l'ID généré
+    query.bindValue(":nom_emp", Nom_E);
+    query.bindValue(":prenom_emp", Prenom_E);
+    query.bindValue(":date_nais", Date_Nais_E.toString("yyyy-MM-dd"));
+    query.bindValue(":add_emp", Adresse_E);
+    query.bindValue(":email_emp", Email_E);
+    query.bindValue(":tel_emp", Tel_E);
+    query.bindValue(":poste_emp", Poste_E);
+    query.bindValue(":Answ1_emp", Answ1_E);
+    query.bindValue(":Answ2_emp", Answ2_E);
+    query.bindValue(":mdp_emp", Mdp_E);
+    query.bindValue(":sexe_emp", Sexe_E);
+    query.bindValue(":rfid_emp", RFID_E);
+    query.bindValue(":attempts_emp", 3);
+
+    bool res = query.exec();
+    if (!res) {
+        qDebug() << "Error adding employee:" << query.lastError().text();
+    }
+    return res;
+}
 
 bool Employees::modifier() {
     QSqlQuery query;
 
-    query.prepare("UPDATE MAYSSEM.EMPLOYEES SET ID_E=:id_emp,NOM_E=:nom_emp,PRENOM_E=:prenom_emp,DATE_NAISSANCE=TO_DATE(:date_nais,'yyyy-MM-dd'),ADRESSE_E=:add_emp,EMAIL_E=:email_emp,TEL_E=:tel_emp,POSTE_E=:poste_emp,MDP_E=:mdp_emp,SEXE_E=:sexe_emp, Answ1_E=:Answ1_emp,Answ2_E=:Answ2_emp where ID_E= :id_emp");
+    query.prepare("UPDATE MAYSSEM.EMPLOYEES SET NOM_E=:nom_emp,PRENOM_E=:prenom_emp,DATE_NAISSANCE=TO_DATE(:date_nais,'yyyy-MM-dd'),ADRESSE_E=:add_emp,EMAIL_E=:email_emp,TEL_E=:tel_emp,POSTE_E=:poste_emp,MDP_E=:mdp_emp,SEXE_E=:sexe_emp, Answ1_E=:Answ1_emp,Answ2_E=:Answ2_emp where ID_E= :id_emp");
     query.bindValue(":id_emp", Id_E);
     query.bindValue(":nom_emp", Nom_E);
     query.bindValue(":prenom_emp", Prenom_E);

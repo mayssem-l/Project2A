@@ -418,8 +418,13 @@ void MainWindow::on_log_out_button_clicked()
 
 void MainWindow::on_confirm_add_clicked() {
 
+    // Générer automatiquement l'identifiant
+    Employees Emp;
+    int Id_E = Emp.getNextId(); // Récupérer le prochain ID disponible
+    //ui->id_add->setText(QString::number(Id_E)); // Afficher l'ID dans le champ id_add
+
     // Récupérer les données des QLineEdit
-    int Id_E = ui->id_add->text().toInt();
+    //int Id_E = ui->id_add->text().toInt();
     QString Nom_E = ui->nom_add->text();
     QString Prenom_E = ui->prenom_add->text();
     //QDate date = ui->birthdate_add->date();  // This gives a QDate
@@ -440,7 +445,7 @@ void MainWindow::on_confirm_add_clicked() {
     QString Answ1_E = ui->fav_anim_add->text();
     QString Answ2_E = ui->fav_snack_add->text();
     QString RFID_E = ui->rfid_add->text();
-    int Attempts_E;
+    int Attempts_E=3;
     cout << Id_E << endl;
     cout << "nom:  " << Nom_E.toStdString() << " prenom: " << Prenom_E.toStdString() << " adresse:  " << Adresse_E.toStdString() << " Email:  " << Email_E.toStdString() << " tel:  " << Tel_E.toStdString() << " poste:  " << Poste_E.toStdString() << "mdp:  " << Mdp_E.toStdString() << "sexe:  " << Sexe_E.toStdString() << "sexe:  " << Answ1_E.toStdString() << Answ2_E.toStdString() << std::endl;
 
@@ -472,7 +477,7 @@ void MainWindow::on_confirm_add_clicked() {
     if (ajout) {
         QMessageBox::information(this, "Succès", "L'employé a été ajouté avec succès.");
         // Réinitialiser les champs après l'ajout
-        ui->id_add->clear();
+        //ui->id_add->clear();
         ui->nom_add->clear();
         ui->prenom_add->clear();
         //ui->gender_add->clear();
@@ -480,7 +485,7 @@ void MainWindow::on_confirm_add_clicked() {
         ui->adr_add->clear();
         ui->email_add->clear();
         ui->tel_add->clear();
-        ui->poste_add->clear();
+        //ui->poste_add->clear();
         ui->mdp_add->clear();
         ui->fav_anim_add->clear();
         ui->fav_snack_add->clear();
@@ -562,6 +567,7 @@ void MainWindow::on_edit_clicked() {
     cout << "here_affichage" << endl;
     //set the line_edits in edit interface
     ui->id_edit->setText(QString::number(id_E));
+    ui->id_edit->setEnabled(false);
     ui->nom_edit->setText(nom_E);
     ui->prenom_edit->setText(prenom_E);
     ui->birthdate_edit->setDate(date_Nais_E);
@@ -624,7 +630,7 @@ void MainWindow::on_confirm_edit_clicked() {
         ui->adr_edit->clear();
         ui->email_edit->clear();
         ui->tel_edit->clear();
-        ui->poste_edit->clear();
+        //ui->poste_edit->clear();
         ui->mdp_edit->clear();
     } else {
         QMessageBox::critical(this, "Erreur", "La modification de l'employé a échoué.");
