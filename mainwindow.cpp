@@ -112,7 +112,7 @@ void MainWindow::readarduino()
     // lastLine.remove('\r');
     // qDebug() << "---------------->" << lastLine;
     QSqlQuery query;
-    query.prepare("SELECT NOM_E, PRENOM_E, ATTEMPTSLEFT_E FROM MAYSSEM.EMPLOYEES WHERE RFID_E = :rfid");
+    query.prepare("SELECT NOM_E, PRENOM_E, Attempts_E FROM MAYSSEM.EMPLOYEES WHERE RFID_E = :rfid");
     query.bindValue(":rfid", message);
 
     // Execute the query
@@ -127,13 +127,13 @@ void MainWindow::readarduino()
         firstName = query.value("NOM_E").toString();
         lastName = query.value("PRENOM_E").toString();
         qDebug() << "Employee found:" << firstName << lastName;
-        attemptsLeft = query.value("ATTEMPTSLEFT_E").toInt();
+        attemptsLeft = query.value("Attempts_E").toInt();
         if (attemptsLeft > 0) {
             // Décrémentez le nombre de tentatives
             attemptsLeft--;
             // Mettez à jour la base de données avec le nouveau nombre de tentatives
             QSqlQuery updateQuery;
-            updateQuery.prepare("UPDATE MAYSSEM.EMPLOYEES SET ATTEMPTSLEFT_E = :attemptsLeft WHERE RFID_E = :rfid");
+            updateQuery.prepare("UPDATE MAYSSEM.EMPLOYEES SET Attempts_E = :attemptsLeft WHERE RFID_E = :rfid");
             updateQuery.bindValue(":attemptsLeft", attemptsLeft);
             updateQuery.bindValue(":rfid", message);
 
